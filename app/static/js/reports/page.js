@@ -18,7 +18,7 @@ function monthKey(date) {
 function monthLabel(key) {
     const [year, month] = key.split("-").map(Number);
     const date = new Date(year, month - 1, 1);
-    return new Intl.DateTimeFormat("en-US", { month: "short", year: "2-digit" }).format(date);
+    return new Intl.DateTimeFormat("es-419", { month: "short", year: "2-digit" }).format(date);
 }
 
 function buildTopProducts(products, sales) {
@@ -36,7 +36,7 @@ function buildTopProducts(products, sales) {
 
     return Array.from(aggregate.entries())
         .map(([productId, stats]) => ({
-            name: productMap.get(productId)?.name || `Product #${productId}`,
+            name: productMap.get(productId)?.name || `Producto #${productId}`,
             quantity: stats.quantity,
             revenue: Number(stats.revenue.toFixed(2)),
         }))
@@ -64,7 +64,7 @@ function buildDailySalesSeries(sales) {
 
     const labels = Array.from(map.keys()).map((key) => {
         const date = new Date(key);
-        return new Intl.DateTimeFormat("en-US", { weekday: "short" }).format(date);
+        return new Intl.DateTimeFormat("es-419", { weekday: "short" }).format(date);
     });
     const values = Array.from(map.values()).map((value) => Number(value.toFixed(2)));
 
@@ -119,7 +119,7 @@ async function initReports() {
             showReportsError(error.message);
             return;
         }
-        showReportsError("Unable to load reports data.");
+        showReportsError("No se pudieron cargar los datos de reportes.");
     }
 }
 

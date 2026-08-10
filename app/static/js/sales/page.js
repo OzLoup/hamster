@@ -52,29 +52,29 @@ function addLine() {
     const quantity = Number(quantityInput?.value || 0);
 
     if (!productId) {
-        showMessage(errorBox, "Please select a product.");
-        notify("warning", "Select a product before adding a sale line.");
+        showMessage(errorBox, "Por favor selecciona un producto.");
+        notify("warning", "Selecciona un producto antes de agregar una línea de venta.");
         return;
     }
 
     if (!Number.isInteger(quantity) || quantity <= 0) {
-        showMessage(errorBox, "Quantity must be a positive integer.");
-        notify("warning", "Quantity must be a positive integer.");
+        showMessage(errorBox, "La cantidad debe ser un número entero positivo.");
+        notify("warning", "La cantidad debe ser un número entero positivo.");
         return;
     }
 
     const product = state.productsById.get(productId);
     if (!product) {
-        showMessage(errorBox, "Selected product is not available.");
-        notify("error", "Selected product is not available.");
+        showMessage(errorBox, "El producto seleccionado no está disponible.");
+        notify("error", "El producto seleccionado no está disponible.");
         return;
     }
 
     const existing = state.lines.find((line) => line.productId === productId);
     const nextQuantity = (existing?.quantity || 0) + quantity;
     if (nextQuantity > product.stock_quantity) {
-        showMessage(errorBox, `Quantity exceeds available stock (${product.stock_quantity}).`);
-        notify("warning", `Quantity exceeds available stock (${product.stock_quantity}).`);
+        showMessage(errorBox, `La cantidad supera el stock disponible (${product.stock_quantity}).`);
+        notify("warning", `La cantidad supera el stock disponible (${product.stock_quantity}).`);
         return;
     }
 
@@ -109,6 +109,12 @@ async function submitCurrentSale() {
 
     const customerName = (customerInput?.value || "").trim();
     const paymentMethod = paymentSelect?.value || "";
+    const paymentMethodLabel = {
+        cash: "efectivo",
+        card: "tarjeta",
+        bank_transfer: "transferencia bancaria",
+        digital_wallet: "billetera digital",
+    }[paymentMethod] || paymentMethod.replace("_", " ");
 
     const validation = validateSaleInput({
         customerName,
@@ -118,7 +124,7 @@ async function submitCurrentSale() {
 
     if (!validation.isValid) {
         showMessage(errorBox, validation.errors.join(" "));
-        notify("warning", "Please complete required sale details before submitting.");
+        notify("warning", "Por favor completa los datos requeridos de la venta antes de enviar.");
         return;
     }
 
@@ -145,8 +151,8 @@ async function submitCurrentSale() {
 
         await submitSale(payload);
 
-        showMessage(successBox, `Sale registered for ${customerName} via ${paymentMethod.replace("_", " ")}.`);
-        notify("success", "Sale submitted successfully.");
+        showMessage(successBox, `Venta registrada para ${customerName} vía ${paymentMethodLabel}.`);
+        notify("success", "Venta registrada correctamente.");
         state.lines = [];
         if (customerInput) {
             customerInput.value = "";
@@ -162,11 +168,11 @@ async function submitCurrentSale() {
         if (error instanceof ApiError) {
             const details = formatFastApiValidation(error.details);
             showMessage(errorBox, details.length ? details.join(" ") : error.message);
-            notify("error", details.length ? "Validation failed for sale submission." : error.message);
+            notify("error", details.length ? "Error de validación al enviar la venta." : error.message);
             return;
         }
-        showMessage(errorBox, error.message || "Unable to submit sale.");
-        notify("error", error.message || "Unable to submit sale.");
+        showMessage(errorBox, error.message || "No se pudo registrar la venta.");
+        notify("error", error.message || "No se pudo registrar la venta.");
     } finally {
         setSubmitting({
             submitButton,
@@ -199,8 +205,8 @@ async function loadProducts() {
         state.productsById = new Map(products.map((product) => [product.id, product]));
         renderProductOptions(productSelect, products);
     } catch (error) {
-        showMessage(errorBox, error.message || "Unable to load products for sale registration.");
-        notify("error", error.message || "Unable to load products for sale registration.");
+        showMessage(errorBox, error.message || "No se pudieron cargar los productos para el registro de venta.");
+        notify("error", error.message || "No se pudieron cargar los productos para el registro de venta.");
     }
 }
 

@@ -14,27 +14,27 @@ export function validateProductPayload(rawPayload) {
     const salePrice = toNumber(rawPayload.sale_price);
 
     if (!name || name.length < 1 || name.length > 150) {
-        errors.push("Product name must be between 1 and 150 characters.");
+        errors.push("El nombre del producto debe tener entre 1 y 150 caracteres.");
     }
 
     if (!sku || sku.length < 1 || sku.length > 64) {
-        errors.push("SKU must be between 1 and 64 characters.");
+        errors.push("El SKU debe tener entre 1 y 64 caracteres.");
     }
 
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
-        errors.push("Category is required.");
+        errors.push("Se requiere categoría.");
     }
 
     if (!Number.isInteger(stockQuantity) || stockQuantity < 0) {
-        errors.push("Stock must be a non-negative integer.");
+        errors.push("El stock debe ser un número entero no negativo.");
     }
 
     if (!Number.isFinite(cost) || cost < 0) {
-        errors.push("Cost must be a non-negative number.");
+        errors.push("El costo debe ser un número no negativo.");
     }
 
     if (!Number.isFinite(salePrice) || salePrice < 0) {
-        errors.push("Sale price must be a non-negative number.");
+        errors.push("El precio de venta debe ser un número no negativo.");
     }
 
     const payload = {

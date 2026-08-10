@@ -95,14 +95,14 @@ export function createProductModal() {
             return;
         }
         if (mode === "edit") {
-            title.textContent = "Edit Product";
-            subtitle.textContent = "Update existing product details.";
-            submitLabel.textContent = "Update Product";
+            title.textContent = "Editar producto";
+            subtitle.textContent = "Actualiza los detalles del producto.";
+            submitLabel.textContent = "Guardar producto";
             return;
         }
-        title.textContent = "Create Product";
-        subtitle.textContent = "Add a new product to your catalog.";
-        submitLabel.textContent = "Save Product";
+        title.textContent = "Crear producto";
+        subtitle.textContent = "Agrega un nuevo producto a tu catálogo.";
+        submitLabel.textContent = "Guardar producto";
     };
 
     const setSubmitting = (isSubmitting) => {
@@ -118,7 +118,7 @@ export function createProductModal() {
             return;
         }
         categorySelect.innerHTML = [
-            '<option value="">Select category</option>',
+            '<option value="">Selecciona categoría</option>',
             ...categories.map((category) => `<option value="${category.id}">${category.name}</option>`),
         ].join("");
     };

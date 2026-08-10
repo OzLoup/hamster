@@ -3,7 +3,7 @@ function currency(value) {
     if (Number.isNaN(amount)) {
         return "$0.00";
     }
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("es-419", {
         style: "currency",
         currency: "USD",
         maximumFractionDigits: 2,
@@ -43,7 +43,7 @@ export function renderTopProducts(items) {
                         <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-brand-500/20 text-xs font-semibold text-brand-200">${index + 1}</span>
                         <div>
                             <p class="text-sm font-medium text-slate-100">${item.name}</p>
-                            <p class="text-xs text-slate-400">Qty sold: ${item.quantity}</p>
+                            <p class="text-xs text-slate-400">Cant. vendida: ${item.quantity}</p>
                         </div>
                     </div>
                     <span class="text-xs text-emerald-300">${currency(item.revenue)}</span>
@@ -71,7 +71,7 @@ export function renderLowStock(items) {
             (item) => `
                 <div class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/65 px-3 py-2.5">
                     <p class="text-sm font-medium text-slate-100">${item.name}</p>
-                    <span class="rounded-lg bg-rose-500/20 px-2 py-1 text-xs text-rose-200">Stock: ${item.stock_quantity}</span>
+                    <span class="rounded-lg bg-rose-500/20 px-2 py-1 text-xs text-rose-200">Stock disponible: ${item.stock_quantity}</span>
                 </div>
             `
         )
@@ -105,7 +105,7 @@ export function renderDailySalesChart(labels, values) {
             labels,
             datasets: [
                 {
-                    label: "Daily Sales",
+                    label: "Ventas diarias",
                     data: values,
                     ...chartDatasetStyle("#22d3ee"),
                 },
@@ -157,7 +157,7 @@ export function renderMonthlyRevenueChart(labels, values) {
             labels,
             datasets: [
                 {
-                    label: "Monthly Revenue",
+                    label: "Ingresos mensuales",
                     data: values,
                     borderRadius: 8,
                     backgroundColor: "#3b82f6aa",

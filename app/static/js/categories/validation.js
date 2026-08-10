@@ -5,11 +5,11 @@ export function validateCategoryPayload(rawPayload) {
     const description = String(rawPayload.description || "").trim();
 
     if (!name || name.length < 1 || name.length > 120) {
-        errors.push("Category name must be between 1 and 120 characters.");
+        errors.push("El nombre de la categoría debe tener entre 1 y 120 caracteres.");
     }
 
     if (description.length > 255) {
-        errors.push("Description cannot exceed 255 characters.");
+        errors.push("La descripción no puede exceder los 255 caracteres.");
     }
 
     return {

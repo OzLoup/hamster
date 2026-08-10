@@ -1,5 +1,4 @@
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
-from app.schemas.item import ItemCreate, ItemRead, ItemUpdate
 from app.schemas.product import ProductCreate, ProductListResponse, ProductRead, ProductUpdate
 from app.schemas.sale import SaleCreate, SaleRead, SaleUpdate
 from app.schemas.sale_item import SaleItemCreate, SaleItemRead, SaleItemUpdate
@@ -9,9 +8,6 @@ __all__ = [
     "CategoryCreate",
     "CategoryRead",
     "CategoryUpdate",
-    "ItemCreate",
-    "ItemRead",
-    "ItemUpdate",
     "ProductCreate",
     "ProductListResponse",
     "ProductRead",

@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Categories | {{ app_name }}{% endblock %}
+{% block title %}Categorías | {{ app_name }}{% endblock %}
 
 {% block page_header %}
 <section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Taxonomy</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Categories</h2>
-            <p class="mt-2 text-sm text-slate-300">Organize your catalog structure and maintain product groups.</p>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Taxonomía</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Categorías</h2>
+            <p class="mt-2 text-sm text-slate-300">Organiza la estructura de tu catálogo y administra los grupos de productos.</p>
         </div>
         <div class="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
             <div class="w-full sm:max-w-md">
-                <label for="category-search" class="mb-2 block text-xs font-medium uppercase tracking-widest text-slate-400">Search Categories</label>
+                <label for="category-search" class="mb-2 block text-xs font-medium uppercase tracking-widest text-slate-400">Buscar categorías</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -22,9 +22,9 @@
                     <input
                         id="category-search"
                         type="search"
-                        placeholder="Search by category name"
+                        placeholder="Buscar por nombre de categoría"
                         class="saas-input py-2.5 pl-10 pr-3"
-                        aria-label="Search categories"
+                        aria-label="Buscar categorías"
                     />
                 </div>
             </div>
@@ -36,7 +36,7 @@
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
                 </svg>
-                Add Category
+                Agregar categoría
             </button>
         </div>
     </div>
@@ -51,16 +51,16 @@
         <table class="min-w-full text-left text-sm">
             <thead>
                 <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
-                    <th class="px-3 py-3 font-medium">Category</th>
-                    <th class="px-3 py-3 font-medium">Description</th>
-                    <th class="px-3 py-3 font-medium">Created At</th>
-                    <th class="px-3 py-3 font-medium text-right">Actions</th>
+                    <th class="px-3 py-3 font-medium">Categoría</th>
+                    <th class="px-3 py-3 font-medium">Descripción</th>
+                    <th class="px-3 py-3 font-medium">Creado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
                 </tr>
             </thead>
             <tbody id="categories-table-body" class="divide-y divide-slate-800 text-slate-200">
                 <tr>
                     <td colspan="4" class="px-3 py-10">
-                        <div class="saas-empty animate-pulseSoft">Loading categories...</div>
+                        <div class="saas-empty animate-pulseSoft">Cargando categorías...</div>
                     </td>
                 </tr>
             </tbody>
@@ -81,14 +81,14 @@
     >
         <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
             <div>
-                <h3 id="category-modal-title" class="text-lg font-semibold text-white">Create Category</h3>
-                <p id="category-modal-subtitle" class="text-xs text-slate-400">Add a new category for your catalog.</p>
+                <h3 id="category-modal-title" class="text-lg font-semibold text-white">Crear categoría</h3>
+                <p id="category-modal-subtitle" class="text-xs text-slate-400">Agrega una nueva categoría a tu catálogo.</p>
             </div>
             <button
                 id="close-category-modal"
                 type="button"
                 class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                aria-label="Close modal"
+                aria-label="Cerrar ventana modal"
             >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -101,13 +101,13 @@
             <div id="category-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
 
             <div>
-                <label for="category-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Category Name</label>
-                <input id="category-name" name="name" type="text" class="category-field saas-input" placeholder="Electronics" />
+                <label for="category-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre de categoría</label>
+                <input id="category-name" name="name" type="text" class="category-field saas-input" placeholder="Electrónicos" />
             </div>
 
             <div>
-                <label for="category-description" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Description</label>
-                <textarea id="category-description" name="description" rows="4" class="category-field saas-textarea" placeholder="Devices and accessories"></textarea>
+                <label for="category-description" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Descripción</label>
+                <textarea id="category-description" name="description" rows="4" class="category-field saas-textarea" placeholder="Dispositivos y accesorios"></textarea>
             </div>
 
             <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
@@ -116,7 +116,7 @@
                     type="button"
                     class="saas-btn saas-btn-muted px-4 py-2.5 text-sm"
                 >
-                    Cancel
+                    Cancelar
                 </button>
                 <button
                     id="submit-category"
@@ -126,7 +126,7 @@
                     <svg id="category-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
                     </svg>
-                    <span id="category-submit-label">Save Category</span>
+                    <span id="category-submit-label">Guardar categoría</span>
                 </button>
             </div>
         </form>
@@ -138,11 +138,11 @@
     class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
 >
     <div id="category-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
-        <h3 class="text-lg font-semibold text-white">Delete Category</h3>
-        <p id="category-confirm-message" class="mt-2 text-sm text-slate-300">Are you sure you want to delete this category?</p>
+        <h3 class="text-lg font-semibold text-white">Eliminar categoría</h3>
+        <p id="category-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro de que deseas eliminar esta categoría?</p>
         <div class="mt-6 flex justify-end gap-2">
-            <button id="cancel-category-delete" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancel</button>
-            <button id="confirm-category-delete" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Delete</button>
+            <button id="cancel-category-delete" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-category-delete" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Eliminar</button>
         </div>
     </div>
 </div>

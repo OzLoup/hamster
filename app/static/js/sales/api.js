@@ -16,7 +16,7 @@ async function parseError(response) {
         const detail = payload.detail;
         if (Array.isArray(detail)) {
             return {
-                message: "Validation failed.",
+                message: "Validación fallida.",
                 details: detail,
             };
         }

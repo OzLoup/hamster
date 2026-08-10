@@ -15,9 +15,9 @@ async function assertOk(response) {
 
     try {
         const payload = await response.json();
-        throw new ApiError(payload.detail || "Unable to fetch report data.");
+        throw new ApiError(payload.detail || "No se pudieron obtener los datos de reportes.");
     } catch {
-        throw new ApiError("Unable to fetch report data.");
+        throw new ApiError("No se pudieron obtener los datos de reportes.");
     }
 }
 

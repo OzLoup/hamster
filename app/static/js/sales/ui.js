@@ -3,7 +3,7 @@ function currency(value) {
     if (Number.isNaN(amount)) {
         return "$0.00";
     }
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("es-419", {
         style: "currency",
         currency: "USD",
     }).format(amount);
@@ -15,10 +15,10 @@ export function renderProductOptions(selectElement, products) {
     }
 
     selectElement.innerHTML = [
-        '<option value="">Select a product</option>',
+        '<option value="">Selecciona un producto</option>',
         ...products.map(
             (product) =>
-                `<option value="${product.id}">${product.name} (Stock: ${product.stock_quantity})</option>`
+                `<option value="${product.id}">${product.name} (Stock disponible: ${product.stock_quantity})</option>`
         ),
     ].join("");
 }
@@ -32,7 +32,7 @@ export function renderSaleLines(tableBody, lines) {
         tableBody.innerHTML = `
             <tr>
                 <td colspan="5" class="px-3 py-8">
-                    <div class="saas-empty">No products added yet.</div>
+                    <div class="saas-empty">Aún no hay productos agregados.</div>
                 </td>
             </tr>
         `;
@@ -49,7 +49,7 @@ export function renderSaleLines(tableBody, lines) {
                     <td class="px-3 py-3 text-slate-200">${currency(line.subtotal)}</td>
                     <td class="px-3 py-3">
                         <div class="flex justify-end">
-                            <button data-action="remove" data-id="${line.productId}" class="saas-btn saas-btn-danger rounded-lg px-2.5 py-1.5 text-xs">Remove</button>
+                            <button data-action="remove" data-id="${line.productId}" class="saas-btn saas-btn-danger rounded-lg px-2.5 py-1.5 text-xs">Eliminar</button>
                         </div>
                     </td>
                 </tr>
@@ -75,7 +75,7 @@ export function setSubmitting({ submitButton, spinner, label, isSubmitting }) {
         spinner.classList.toggle("hidden", !isSubmitting);
     }
     if (label) {
-        label.textContent = isSubmitting ? "Submitting..." : "Submit Sale";
+        label.textContent = isSubmitting ? "Enviando..." : "Enviar venta";
     }
 }
 

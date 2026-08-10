@@ -2,15 +2,15 @@ export function validateSaleInput({ customerName, paymentMethod, lines }) {
     const errors = [];
 
     if (!customerName || customerName.trim().length < 2) {
-        errors.push("Customer name must contain at least 2 characters.");
+        errors.push("El nombre del cliente debe contener al menos 2 caracteres.");
     }
 
     if (!paymentMethod) {
-        errors.push("Payment method is required.");
+        errors.push("Se requiere un método de pago.");
     }
 
     if (!Array.isArray(lines) || lines.length === 0) {
-        errors.push("Add at least one product line before submitting the sale.");
+        errors.push("Agrega al menos una línea de producto antes de enviar la venta.");
     }
 
     return {

@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | {{ app_name }}{% endblock %}
+{% block title %}Panel | {{ app_name }}{% endblock %}
 
 {% block page_header %}
 <section class="saas-card mb-6 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-brand-900/40 p-6 sm:p-8">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-teal-300">Operations Center</p>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300">Centro de operaciones</p>
             <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-4xl">{{ app_name }}</h2>
             <p class="mt-2 max-w-2xl text-sm text-slate-300">
-                Real-time KPI surface for inventory and sales performance. Values below are currently seeded placeholders.
+                Panel de indicadores en tiempo real para inventario y ventas. Los valores a continuación son ejemplos precargados.
             </p>
         </div>
         <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
             <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-300"></span>
-            Demo data enabled
+            Datos de demostración activados
         </div>
     </div>
 </section>
@@ -25,7 +25,7 @@
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/60 hover:shadow-indigo-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Total Products</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Total de productos</p>
                 <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_products if stats else 25 }}</p>
             </div>
             <span class="rounded-xl bg-indigo-500/15 p-2.5 text-indigo-300 ring-1 ring-indigo-500/40 transition-transform duration-300 group-hover:scale-110">
@@ -36,14 +36,14 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-emerald-300">
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span>Catalog healthy</span>
+            <span>Catálogo saludable</span>
         </div>
     </article>
 
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-cyan-400/60 hover:shadow-cyan-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Total Categories</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Total de categorías</p>
                 <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_categories if stats else 5 }}</p>
             </div>
             <span class="rounded-xl bg-cyan-500/15 p-2.5 text-cyan-300 ring-1 ring-cyan-500/40 transition-transform duration-300 group-hover:scale-110">
@@ -54,14 +54,14 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-cyan-300">
             <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
-            <span>Balanced grouping</span>
+            <span>Agrupación equilibrada</span>
         </div>
     </article>
 
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/60 hover:shadow-violet-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Total Sales</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Total de ventas</p>
                 <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_sales if stats else 128 }}</p>
             </div>
             <span class="rounded-xl bg-violet-500/15 p-2.5 text-violet-300 ring-1 ring-violet-500/40 transition-transform duration-300 group-hover:scale-110">
@@ -72,14 +72,14 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-violet-300">
             <span class="h-2 w-2 rounded-full bg-violet-400"></span>
-            <span>Steady transaction flow</span>
+            <span>Flujo de transacciones estable</span>
         </div>
     </article>
 
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/60 hover:shadow-emerald-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Today's Revenue</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Ingresos de hoy</p>
                 <p class="mt-3 text-3xl font-semibold text-white">{{ stats.todays_revenue if stats else '$4,380.50' }}</p>
             </div>
             <span class="rounded-xl bg-emerald-500/15 p-2.5 text-emerald-300 ring-1 ring-emerald-500/40 transition-transform duration-300 group-hover:scale-110">
@@ -90,14 +90,14 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-emerald-300">
             <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span>+12.4% vs yesterday</span>
+            <span>+12.4% vs. ayer</span>
         </div>
     </article>
 
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-rose-400/60 hover:shadow-rose-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Low Stock Products</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Productos con bajo stock</p>
                 <p class="mt-3 text-3xl font-semibold text-white">{{ stats.low_stock_products if stats else 7 }}</p>
             </div>
             <span class="rounded-xl bg-rose-500/15 p-2.5 text-rose-300 ring-1 ring-rose-500/40 transition-transform duration-300 group-hover:scale-110">
@@ -109,7 +109,7 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-rose-300">
             <span class="h-2 w-2 rounded-full bg-rose-400"></span>
-            <span>Needs replenishment</span>
+            <span>Requiere reposición</span>
         </div>
     </article>
 </section>

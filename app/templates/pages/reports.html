@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Reports | {{ app_name }}{% endblock %}
+{% block title %}Reportes | {{ app_name }}{% endblock %}
 
 {% block page_header %}
 <section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Business Intelligence</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Reports</h2>
-            <p class="mt-2 text-sm text-slate-300">Track product performance, daily sales trends, and revenue growth.</p>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Inteligencia de negocios</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Reportes</h2>
+            <p class="mt-2 text-sm text-slate-300">Sigue el rendimiento de productos, tendencias diarias de ventas y crecimiento de ingresos.</p>
         </div>
         <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-200">
             <span class="h-2 w-2 animate-pulse rounded-full bg-brand-300"></span>
-            Live analytics view
+            Vista de análisis en vivo
         </span>
     </div>
 </section>
@@ -22,7 +22,7 @@
 <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-slate-100">Top Selling Products</h3>
+            <h3 class="text-base font-semibold text-slate-100">Productos más vendidos</h3>
             <span class="rounded-lg bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-200">Top 5</span>
         </div>
         <div id="reports-top-products-loading" class="space-y-3 animate-pulseSoft" aria-hidden="true">
@@ -32,15 +32,15 @@
             <div class="h-10 rounded-xl bg-slate-800/70"></div>
         </div>
         <div id="reports-top-products-empty" class="saas-empty hidden text-sm">
-            No sales data available yet.
+            No hay datos de ventas disponibles aún.
         </div>
         <div id="reports-top-products-list" class="hidden space-y-2"></div>
     </article>
 
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-slate-100">Low Stock Products</h3>
-            <span class="rounded-lg bg-rose-500/15 px-2.5 py-1 text-xs text-rose-200">Alert</span>
+            <h3 class="text-base font-semibold text-slate-100">Productos con bajo stock</h3>
+            <span class="rounded-lg bg-rose-500/15 px-2.5 py-1 text-xs text-rose-200">Alerta</span>
         </div>
         <div id="reports-low-stock-loading" class="space-y-3 animate-pulseSoft" aria-hidden="true">
             <div class="h-10 rounded-xl bg-slate-800/70"></div>
@@ -48,15 +48,15 @@
             <div class="h-10 rounded-xl bg-slate-800/70"></div>
         </div>
         <div id="reports-low-stock-empty" class="saas-empty hidden text-sm">
-            No low-stock products right now.
+            No hay productos con bajo stock en este momento.
         </div>
         <div id="reports-low-stock-list" class="hidden space-y-2"></div>
     </article>
 
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-slate-100">Daily Sales</h3>
-            <span class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Last 7 days</span>
+            <h3 class="text-base font-semibold text-slate-100">Ventas diarias</h3>
+            <span class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Últimos 7 días</span>
         </div>
         <div id="reports-daily-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
         <canvas id="reports-daily-chart" class="hidden h-64 w-full"></canvas>
@@ -64,8 +64,8 @@
 
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
-            <h3 class="text-base font-semibold text-slate-100">Monthly Revenue</h3>
-            <span class="rounded-lg bg-brand-500/15 px-2.5 py-1 text-xs text-brand-200">Last 6 months</span>
+            <h3 class="text-base font-semibold text-slate-100">Ingresos mensuales</h3>
+            <span class="rounded-lg bg-brand-500/15 px-2.5 py-1 text-xs text-brand-200">Últimos 6 meses</span>
         </div>
         <div id="reports-monthly-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
         <canvas id="reports-monthly-chart" class="hidden h-64 w-full"></canvas>

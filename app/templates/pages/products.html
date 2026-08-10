@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Products | {{ app_name }}{% endblock %}
+{% block title %}Productos | {{ app_name }}{% endblock %}
 
 {% block page_header %}
 <section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Catalog Hub</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Products</h2>
-            <p class="mt-2 max-w-2xl text-sm text-slate-300">Search, review, and manage your product catalog in one place.</p>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Centro de catálogo</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Productos</h2>
+            <p class="mt-2 max-w-2xl text-sm text-slate-300">Busca, revisa y administra tu catálogo de productos en un solo lugar.</p>
         </div>
         <div class="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
             <div class="w-full sm:max-w-md">
-                <label for="product-search" class="mb-2 block text-xs font-medium uppercase tracking-widest text-slate-400">Search Products</label>
+                <label for="product-search" class="mb-2 block text-xs font-medium uppercase tracking-widest text-slate-400">Buscar productos</label>
                 <div class="relative">
                     <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -22,9 +22,9 @@
                     <input
                         id="product-search"
                         type="search"
-                        placeholder="Search by product name"
+                        placeholder="Buscar por nombre de producto"
                         class="saas-input py-2.5 pl-10 pr-3"
-                        aria-label="Search products"
+                        aria-label="Buscar productos"
                     />
                 </div>
             </div>
@@ -36,7 +36,7 @@
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
                 </svg>
-                Add Product
+                Agregar producto
             </button>
         </div>
     </div>
@@ -51,19 +51,19 @@
         <table class="min-w-full text-left text-sm">
             <thead>
                 <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
-                    <th class="px-3 py-3 font-medium">Product</th>
-                    <th class="px-3 py-3 font-medium">Category</th>
+                    <th class="px-3 py-3 font-medium">Producto</th>
+                    <th class="px-3 py-3 font-medium">Categoría</th>
                     <th class="px-3 py-3 font-medium">Stock</th>
-                    <th class="px-3 py-3 font-medium">Cost</th>
-                    <th class="px-3 py-3 font-medium">Sale Price</th>
-                    <th class="px-3 py-3 font-medium">Status</th>
-                    <th class="px-3 py-3 font-medium text-right">Actions</th>
+                    <th class="px-3 py-3 font-medium">Costo</th>
+                    <th class="px-3 py-3 font-medium">Precio de venta</th>
+                    <th class="px-3 py-3 font-medium">Estado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
                 </tr>
             </thead>
             <tbody id="products-table-body" class="divide-y divide-slate-800 text-slate-200">
                 <tr>
                     <td colspan="7" class="px-3 py-10">
-                        <div class="saas-empty animate-pulseSoft">Loading products...</div>
+                        <div class="saas-empty animate-pulseSoft">Cargando productos...</div>
                     </td>
                 </tr>
             </tbody>
@@ -71,22 +71,22 @@
     </div>
 
     <div class="mt-5 flex flex-col gap-3 border-t border-slate-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-        <p id="products-meta" class="text-xs text-slate-400">Showing 0 to 0 of 0 products</p>
+        <p id="products-meta" class="text-xs text-slate-400">Mostrando 0 a 0 de 0 productos</p>
         <div class="flex items-center gap-2">
             <button
                 id="products-prev"
                 class="saas-btn saas-btn-muted rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40"
                 type="button"
             >
-                Previous
+                Anterior
             </button>
-            <span id="products-page-indicator" class="min-w-24 text-center text-xs text-slate-300">Page 1 of 1</span>
+            <span id="products-page-indicator" class="min-w-24 text-center text-xs text-slate-300">Página 1 de 1</span>
             <button
                 id="products-next"
                 class="saas-btn saas-btn-muted rounded-lg px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-40"
                 type="button"
             >
-                Next
+                Siguiente
             </button>
         </div>
     </div>
@@ -105,14 +105,14 @@
     >
         <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
             <div>
-                <h3 id="product-modal-title" class="text-lg font-semibold text-white">Create Product</h3>
-                <p id="product-modal-subtitle" class="text-xs text-slate-400">Add a new product to your catalog.</p>
+                <h3 id="product-modal-title" class="text-lg font-semibold text-white">Crear producto</h3>
+                <p id="product-modal-subtitle" class="text-xs text-slate-400">Agrega un nuevo producto a tu catálogo.</p>
             </div>
             <button
                 id="close-product-modal"
                 type="button"
                 class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
-                aria-label="Close modal"
+                aria-label="Cerrar ventana modal"
             >
                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -126,12 +126,12 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
-                    <label for="product-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Product Name</label>
-                    <input id="product-name" name="name" type="text" class="product-field saas-input" placeholder="Wireless Keyboard" />
+                    <label for="product-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre del producto</label>
+                    <input id="product-name" name="name" type="text" class="product-field saas-input" placeholder="Teclado inalámbrico" />
                 </div>
 
                 <div>
-                    <label for="product-category" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Category</label>
+                    <label for="product-category" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Categoría</label>
                     <select id="product-category" name="category_id" class="product-field saas-select"></select>
                 </div>
 
@@ -146,12 +146,12 @@
                 </div>
 
                 <div>
-                    <label for="product-cost" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Cost</label>
+                    <label for="product-cost" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Costo</label>
                     <input id="product-cost" name="cost" type="number" min="0" step="0.01" class="product-field saas-input" placeholder="0.00" />
                 </div>
 
                 <div>
-                    <label for="product-sale-price" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Sale Price</label>
+                    <label for="product-sale-price" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Precio de venta</label>
                     <input id="product-sale-price" name="sale_price" type="number" min="0" step="0.01" class="product-field saas-input" placeholder="0.00" />
                 </div>
             </div>
@@ -162,7 +162,7 @@
                     type="button"
                     class="saas-btn saas-btn-muted px-4 py-2.5 text-sm"
                 >
-                    Cancel
+                    Cancelar
                 </button>
                 <button
                     id="submit-product"
@@ -172,7 +172,7 @@
                     <svg id="product-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
                     </svg>
-                    <span id="product-submit-label">Save Product</span>
+                    <span id="product-submit-label">Guardar producto</span>
                 </button>
             </div>
         </form>

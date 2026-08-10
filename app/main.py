@@ -8,7 +8,6 @@ from fastapi.templating import Jinja2Templates
 import uvicorn
 
 from app.core.config import settings
-from app.database.database import create_db_and_tables
 from app.database.seed import seed_database_if_empty
 from app.routers.router import api_router
 
@@ -17,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    create_db_and_tables()
+    # Schema is owned by Alembic migrations (`alembic upgrade head`), not created here.
     seed_database_if_empty()
     yield
 

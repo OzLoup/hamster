@@ -1,4 +1,4 @@
-# Inventory and Sales Management System (FastAPI Scaffold)
+# Hamster (Inventory and Sales Management System — FastAPI Scaffold)
 
 A clean-architecture oriented project scaffold for an inventory and sales management system.
 
@@ -6,7 +6,8 @@ A clean-architecture oriented project scaffold for an inventory and sales manage
 - Python 3.13
 - FastAPI
 - SQLAlchemy
-- SQLite
+- PostgreSQL (via Docker Compose locally; any managed Postgres in the cloud)
+- Alembic
 - Pydantic
 - Jinja2 templates
 
@@ -28,6 +29,39 @@ python --version
 ```
 
 Expected output should begin with `Python 3.13`.
+
+## Database (PostgreSQL)
+
+This project runs on PostgreSQL. Locally it's provisioned via Docker Compose; in the cloud, point `DATABASE_URL` at any managed Postgres instance (RDS, Supabase, Neon, Render, etc.) — no code changes required.
+
+1. Copy the env file and adjust if needed:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Start Postgres:
+
+   ```bash
+   docker compose up -d
+   ```
+
+3. Apply migrations (schema is owned by Alembic, not `create_all`):
+
+   ```bash
+   source .venv/bin/activate && alembic upgrade head
+   ```
+
+4. Run the app as usual (see below). Demo data seeds automatically on first startup if the database is empty.
+
+### Creating new migrations
+
+After changing a model in `app/models/`, generate a migration and review it before applying:
+
+```bash
+alembic revision --autogenerate -m "describe the change"
+alembic upgrade head
+```
 
 ## Architecture Overview
 This scaffold follows clean architecture principles by organizing responsibilities into layers:

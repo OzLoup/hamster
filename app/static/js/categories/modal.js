@@ -117,14 +117,14 @@ export function createCategoryModal() {
             return;
         }
         if (mode === "edit") {
-            title.textContent = "Edit Category";
-            subtitle.textContent = "Update category details.";
-            submitLabel.textContent = "Update Category";
+            title.textContent = "Editar categoría";
+            subtitle.textContent = "Actualiza los detalles de la categoría.";
+            submitLabel.textContent = "Guardar categoría";
             return;
         }
-        title.textContent = "Create Category";
-        subtitle.textContent = "Add a new category for your catalog.";
-        submitLabel.textContent = "Save Category";
+        title.textContent = "Crear categoría";
+        subtitle.textContent = "Agrega una nueva categoría a tu catálogo.";
+        submitLabel.textContent = "Guardar categoría";
     };
 
     const setSubmitting = (isSubmitting) => {
@@ -149,7 +149,7 @@ export function createCategoryModal() {
     const askDelete = (categoryId, categoryName) => {
         deleteTargetId = categoryId;
         if (confirmMessage) {
-            confirmMessage.textContent = `Are you sure you want to delete '${categoryName}'?`;
+            confirmMessage.textContent = `¿Estás seguro de que deseas eliminar '${categoryName}'?`;
         }
         showConfirm();
     };

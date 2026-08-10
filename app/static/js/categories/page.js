@@ -55,8 +55,8 @@ async function loadCategories() {
         applyFilter();
         renderList();
     } catch (error) {
-        showError(errorBox, error.message || "Unable to load categories.");
-        notify("error", error.message || "Unable to load categories.");
+        showError(errorBox, error.message || "No se pudieron cargar las categorías.");
+        notify("error", error.message || "No se pudieron cargar las categorías.");
     }
 }
 
@@ -78,7 +78,7 @@ async function openEditModal(categoryId) {
         modal.fillForm(category);
     } catch (error) {
         modal.hide();
-        showError(errorBox, error.message || "Unable to load category details.");
+        showError(errorBox, error.message || "No se pudieron cargar los detalles de la categoría.");
     } finally {
         modal.setSubmitting(false);
     }
@@ -93,7 +93,7 @@ async function handleSubmitCategory(event) {
     if (!validation.isValid) {
         modal.setErrorMessages(validation.errors);
         modal.markInvalidFields(validation.errors);
-        notify("warning", "Please review category form fields.");
+        notify("warning", "Por favor revisa los campos del formulario de categoría.");
         return;
     }
 
@@ -110,7 +110,7 @@ async function handleSubmitCategory(event) {
         await loadCategories();
         notify(
             "success",
-            modal.getMode() === "edit" ? "Category updated successfully." : "Category created successfully."
+            modal.getMode() === "edit" ? "Categoría actualizada correctamente." : "Categoría creada correctamente."
         );
     } catch (error) {
         if (error instanceof ApiError) {
@@ -118,7 +118,7 @@ async function handleSubmitCategory(event) {
             if (apiMessages.length) {
                 modal.setErrorMessages(apiMessages);
                 modal.markInvalidFields(apiMessages);
-                notify("error", "Validation failed. Please check category details.");
+                notify("error", "Validación fallida. Revisa los detalles de la categoría.");
             } else {
                 modal.setErrorMessages([error.message]);
                 notify("error", error.message);
@@ -127,7 +127,7 @@ async function handleSubmitCategory(event) {
         }
 
         modal.setErrorMessages([error.message || "Unexpected error while saving category."]);
-        notify("error", error.message || "Unexpected error while saving category.");
+        notify("error", error.message || "Error inesperado al guardar la categoría.");
     } finally {
         modal.setSubmitting(false);
     }
@@ -153,7 +153,7 @@ function handleTableActions(event) {
     }
 
     if (action === "delete") {
-        const categoryName = button.dataset.name || "this category";
+        const categoryName = button.dataset.name || "esta categoría";
         modal.askDelete(categoryId, categoryName);
     }
 }
@@ -167,11 +167,11 @@ async function confirmDelete(categoryId) {
         await deleteCategory(categoryId);
         modal.hideConfirm();
         await loadCategories();
-        notify("success", "Category deleted successfully.");
+        notify("success", "Categoría eliminada correctamente.");
     } catch (error) {
         modal.hideConfirm();
-        showError(errorBox, error.message || "Unable to delete category.");
-        notify("error", error.message || "Unable to delete category.");
+        showError(errorBox, error.message || "No se pudo eliminar la categoría.");
+        notify("error", error.message || "No se pudo eliminar la categoría.");
     }
 }
 

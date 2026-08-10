@@ -70,7 +70,7 @@ async function loadProducts() {
             meta,
         });
     } catch (error) {
-        showError(errorBox, error.message || "Unable to load products.");
+        showError(errorBox, error.message || "No se pudieron cargar los productos.");
     }
 }
 
@@ -89,7 +89,7 @@ function handleTableActions(event) {
     const action = button.dataset.action;
 
     if (action === "view") {
-        notify("info", `View action for product #${productId} is not implemented yet.`);
+        notify("info", `La acción Ver para el producto #${productId} aún no está implementada.`);
         return;
     }
 
@@ -101,14 +101,14 @@ function handleTableActions(event) {
     if (action === "delete") {
         if (pendingDeleteId !== productId) {
             pendingDeleteId = productId;
-            notify("warning", "Click Delete again to confirm product removal.", 2600);
+            notify("warning", "Haz clic en Eliminar nuevamente para confirmar la eliminación del producto.", 2600);
             return;
         }
 
         pendingDeleteId = null;
         deleteProduct(productId)
             .then(() => {
-                notify("success", "Product deleted successfully.");
+                notify("success", "Producto eliminado correctamente.");
                 if (state.page > 1 && state.total <= (state.page - 1) * state.pageSize + 1) {
                     state.page -= 1;
                 }
@@ -116,9 +116,9 @@ function handleTableActions(event) {
             })
             .catch((error) => {
                 if (errorBox) {
-                    showError(errorBox, error.message || "Unable to delete product.");
+                    showError(errorBox, error.message || "No se pudo eliminar el producto.");
                 }
-                notify("error", error.message || "Unable to delete product.");
+                notify("error", error.message || "No se pudo eliminar el producto.");
             });
     }
 }
@@ -144,8 +144,8 @@ async function openEditModal(productId) {
         modal.fillForm(product);
     } catch (error) {
         modal.hide();
-        showError(errorBox, error.message || "Unable to load product details.");
-        notify("error", error.message || "Unable to load product details.");
+        showError(errorBox, error.message || "No se pudieron cargar los detalles del producto.");
+        notify("error", error.message || "No se pudieron cargar los detalles del producto.");
     } finally {
         modal.setSubmitting(false);
     }
@@ -167,9 +167,9 @@ async function handleSubmitProduct(event) {
     if (!validation.isValid) {
         modal.setErrorMessages(validation.errors);
         modal.markInvalidFields(validation.errors);
-        notify("warning", "Please review highlighted product form fields.");
-            return;
-        }
+        notify("warning", "Por favor revisa los campos destacados del formulario de producto.");
+        return;
+    }
 
     try {
         modal.setSubmitting(true);
@@ -185,7 +185,7 @@ async function handleSubmitProduct(event) {
         await loadProducts();
         notify(
             "success",
-            modal.getMode() === "edit" ? "Product updated successfully." : "Product created successfully."
+            modal.getMode() === "edit" ? "Producto actualizado correctamente." : "Producto creado correctamente."
         );
     } catch (error) {
         if (error instanceof ApiError) {
@@ -193,7 +193,7 @@ async function handleSubmitProduct(event) {
             if (apiMessages.length) {
                 modal.setErrorMessages(apiMessages);
                 modal.markInvalidFields(apiMessages);
-                notify("error", "Validation failed. Please check form details.");
+                notify("error", "Validación fallida. Revisa los detalles del formulario.");
             } else {
                 modal.setErrorMessages([error.message]);
                 notify("error", error.message);
@@ -201,8 +201,8 @@ async function handleSubmitProduct(event) {
             return;
         }
 
-        modal.setErrorMessages([error.message || "Unexpected error while saving product."]);
-        notify("error", error.message || "Unexpected error while saving product.");
+        modal.setErrorMessages([error.message || "Error inesperado al guardar el producto."]);
+        notify("error", error.message || "Error inesperado al guardar el producto.");
     } finally {
         modal.setSubmitting(false);
     }

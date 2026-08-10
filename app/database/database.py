@@ -22,11 +22,3 @@ def get_db() -> Generator[Session, None, None]:
         yield db
     finally:
         db.close()
-
-
-def create_db_and_tables() -> None:
-    """Create database tables for all registered models."""
-    # Import models before create_all so metadata includes every mapped table.
-    from app import models  # noqa: F401
-
-    Base.metadata.create_all(bind=engine)
