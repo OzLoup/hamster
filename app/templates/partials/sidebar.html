@@ -57,16 +57,6 @@
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/categories') %}bg-brand-500/25 text-brand-200{% endif %}">Grupos</span>
         </a>
         <a
-            href="/inventory"
-            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/inventory') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
-        >
-            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 7.5h15m-15 4.5h15m-15 4.5h9m6.75-12.75v15a1.5 1.5 0 0 1-1.5 1.5h-15a1.5 1.5 0 0 1-1.5-1.5v-15a1.5 1.5 0 0 1 1.5-1.5h15a1.5 1.5 0 0 1 1.5 1.5z"/>
-            </svg>
-            <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Inventario</span>
-            <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/inventory') %}bg-brand-500/25 text-brand-200{% endif %}">Existencias</span>
-        </a>
-        <a
             href="/sales"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/sales') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
         >
@@ -75,6 +65,26 @@
             </svg>
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Ventas</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/sales') %}bg-brand-500/25 text-brand-200{% endif %}">Ingresos</span>
+        </a>
+        <a
+            href="/purchases"
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/purchases') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
+        >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.5l.66 3.322m0 0L6.75 15h10.5l2.25-8.678H4.41M6.75 15L4.5 6.322M6.75 15l-2.25 4.5M17.25 15l2.25 4.5M9 19.5a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0zm7.5 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0z"/>
+            </svg>
+            <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Compras</span>
+            <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/purchases') %}bg-brand-500/25 text-brand-200{% endif %}">Egresos</span>
+        </a>
+        <a
+            href="/suppliers"
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/suppliers') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
+        >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25M21 7.5v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9"/>
+            </svg>
+            <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Proveedores</span>
+            <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/suppliers') %}bg-brand-500/25 text-brand-200{% endif %}">Contactos</span>
         </a>
         <a
             href="/reports"

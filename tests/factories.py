@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.models.category import Category
 from app.models.product import Product
+from app.models.supplier import Supplier
 
 
 def create_category(
@@ -43,6 +44,21 @@ def create_product(
     return product
 
 
+def create_supplier(
+    db_session: Session,
+    *,
+    name: str = "Acme Supplies",
+    contact_name: str | None = None,
+    phone: str | None = None,
+    email: str | None = None,
+) -> Supplier:
+    supplier = Supplier(name=name, contact_name=contact_name, phone=phone, email=email)
+    db_session.add(supplier)
+    db_session.commit()
+    db_session.refresh(supplier)
+    return supplier
+
+
 def category_request_body(
     *,
     name: str = "Electronics",
@@ -70,6 +86,45 @@ def product_request_body(
         "stock_quantity": stock_quantity,
         "cost": cost,
         "sale_price": sale_price,
+    }
+
+
+def supplier_request_body(
+    *,
+    name: str = "Acme Supplies",
+    contact_name: str | None = "Jane Doe",
+    phone: str | None = "555-0100",
+    email: str | None = "jane@acmesupplies.com",
+) -> dict:
+    return {
+        "name": name,
+        "contact_name": contact_name,
+        "phone": phone,
+        "email": email,
+    }
+
+
+def purchase_request_body(
+    *,
+    reference: str,
+    supplier_id: int,
+    product_id: int,
+    quantity: int = 1,
+    unit_cost: str = "40.00",
+) -> dict:
+    subtotal = (Decimal(unit_cost) * Decimal(quantity)).quantize(Decimal("0.01"))
+    return {
+        "reference": reference,
+        "supplier_id": supplier_id,
+        "total_amount": f"{subtotal:.2f}",
+        "purchase_items": [
+            {
+                "product_id": product_id,
+                "quantity": quantity,
+                "unit_cost": unit_cost,
+                "subtotal": f"{subtotal:.2f}",
+            }
+        ],
     }
 
 

@@ -70,14 +70,19 @@ def categories_page(request: Request) -> HTMLResponse:
     return render_page(request, "pages/categories.html")
 
 
-@app.get("/inventory", response_class=HTMLResponse)
-def inventory_page(request: Request) -> HTMLResponse:
-    return render_page(request, "pages/inventory.html")
-
-
 @app.get("/sales", response_class=HTMLResponse)
 def sales_page(request: Request) -> HTMLResponse:
     return render_page(request, "pages/sales.html")
+
+
+@app.get("/suppliers", response_class=HTMLResponse)
+def suppliers_page(request: Request) -> HTMLResponse:
+    return render_page(request, "pages/suppliers.html")
+
+
+@app.get("/purchases", response_class=HTMLResponse)
+def purchases_page(request: Request) -> HTMLResponse:
+    return render_page(request, "pages/purchases.html")
 
 
 @app.get("/reports", response_class=HTMLResponse)

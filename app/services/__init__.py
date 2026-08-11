@@ -2,25 +2,35 @@
 
 from app.services.auth_service import AuthService
 from app.services.category_service import CategoryService
-from app.services.dependencies import get_category_service, get_product_service, get_sale_service
+from app.services.dependencies import (
+	get_category_service,
+	get_product_service,
+	get_purchase_service,
+	get_sale_service,
+	get_supplier_service,
+)
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
-from app.services.inventory_service import InventoryService
 from app.services.product_service import ProductService
+from app.services.purchase_service import PurchaseService
 from app.services.sale_service import SaleService
 from app.services.sales_service import SalesService
+from app.services.supplier_service import SupplierService
 
 __all__ = [
 	"AuthService",
 	"CategoryService",
 	"ProductService",
+	"PurchaseService",
 	"SaleService",
-	"InventoryService",
 	"SalesService",
+	"SupplierService",
 	"ServiceError",
 	"NotFoundError",
 	"ConflictError",
 	"ValidationError",
 	"get_category_service",
 	"get_product_service",
+	"get_purchase_service",
 	"get_sale_service",
+	"get_supplier_service",
 ]

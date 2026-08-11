@@ -131,23 +131,6 @@ class ProductService:
         self.db.refresh(product)
         return product
 
-    def adjust_stock(self, product_id: int, delta: int) -> Product:
-        """Adjust stock by delta while preventing negative stock levels."""
-        product = self.get_product(product_id)
-        new_stock = product.stock_quantity + delta
-        if new_stock < 0:
-            raise ValidationError("Insufficient stock for this operation.")
-
-        product.stock_quantity = new_stock
-        try:
-            self.db.commit()
-        except SQLAlchemyError as exc:
-            self.db.rollback()
-            raise ServiceError("Unexpected database error while adjusting stock.") from exc
-
-        self.db.refresh(product)
-        return product
-
     def _ensure_category_exists(self, category_id: int) -> None:
         exists = self.db.scalar(select(Category.id).where(Category.id == category_id))
         if exists is None:

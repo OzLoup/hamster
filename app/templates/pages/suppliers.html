@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Proveedores | {{ app_name }}{% endblock %}
+
+{% block page_header %}
+<section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Cadena de suministro</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Proveedores</h2>
+            <p class="mt-2 text-sm text-slate-300">Administra los proveedores que abastecen tu catálogo de productos.</p>
+        </div>
+        <div class="flex w-full max-w-2xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
+            <div class="w-full sm:max-w-md">
+                <label for="supplier-search" class="mb-2 block text-xs font-medium uppercase tracking-widest text-slate-400">Buscar proveedores</label>
+                <div class="relative">
+                    <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35m0 0a7.5 7.5 0 1 0-10.607 0 7.5 7.5 0 0 0 10.607 0z"/>
+                        </svg>
+                    </span>
+                    <input
+                        id="supplier-search"
+                        type="search"
+                        placeholder="Buscar por nombre o contacto"
+                        class="saas-input py-2.5 pl-10 pr-3"
+                        aria-label="Buscar proveedores"
+                    />
+                </div>
+            </div>
+            <button
+                id="open-supplier-modal"
+                type="button"
+                class="saas-btn saas-btn-primary px-4 py-2.5 text-sm"
+            >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
+                </svg>
+                Agregar proveedor
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="saas-card rounded-3xl p-4 shadow-soft sm:p-6">
+    <div id="suppliers-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <div class="saas-table-wrap overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
+                    <th class="px-3 py-3 font-medium">Proveedor</th>
+                    <th class="px-3 py-3 font-medium">Contacto</th>
+                    <th class="px-3 py-3 font-medium">Datos de contacto</th>
+                    <th class="px-3 py-3 font-medium">Estado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="suppliers-table-body" class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                    <td colspan="5" class="px-3 py-10">
+                        <div class="saas-empty animate-pulseSoft">Cargando proveedores...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    id="supplier-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="supplier-modal-panel"
+        class="w-full max-w-xl scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="supplier-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="supplier-modal-title" class="text-lg font-semibold text-white">Crear proveedor</h3>
+                <p id="supplier-modal-subtitle" class="text-xs text-slate-400">Agrega un nuevo proveedor.</p>
+            </div>
+            <button
+                id="close-supplier-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="supplier-form" class="space-y-4 px-5 py-5 sm:px-6" novalidate>
+            <input type="hidden" id="supplier-id" />
+            <div id="supplier-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="supplier-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre del proveedor</label>
+                <input id="supplier-name" name="name" type="text" class="supplier-field saas-input" placeholder="Distribuidora ABC" />
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="supplier-contact-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre de contacto</label>
+                    <input id="supplier-contact-name" name="contact_name" type="text" class="supplier-field saas-input" placeholder="María Pérez" />
+                </div>
+                <div>
+                    <label for="supplier-phone" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Teléfono</label>
+                    <input id="supplier-phone" name="phone" type="text" class="supplier-field saas-input" placeholder="300 123 4567" />
+                </div>
+            </div>
+
+            <div>
+                <label for="supplier-email" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Correo electrónico</label>
+                <input id="supplier-email" name="email" type="email" class="supplier-field saas-input" placeholder="contacto@proveedor.com" />
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+                <button
+                    id="cancel-supplier-modal"
+                    type="button"
+                    class="saas-btn saas-btn-muted px-4 py-2.5 text-sm"
+                >
+                    Cancelar
+                </button>
+                <button
+                    id="submit-supplier"
+                    type="submit"
+                    class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <svg id="supplier-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                    </svg>
+                    <span id="supplier-submit-label">Guardar proveedor</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div
+    id="supplier-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="supplier-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 class="text-lg font-semibold text-white">Eliminar proveedor</h3>
+        <p id="supplier-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro de que deseas eliminar este proveedor?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-supplier-delete" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-supplier-delete" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Eliminar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/suppliers/page.js') }}"></script>
+{% endblock %}
