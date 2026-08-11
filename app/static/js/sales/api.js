@@ -50,6 +50,7 @@ export async function fetchProductsForSale() {
     const params = new URLSearchParams();
     params.set("page", "1");
     params.set("page_size", "100");
+    params.set("is_active", "true");
 
     const response = await fetch(`${PRODUCTS_API_BASE}?${params.toString()}`, {
         headers: {

@@ -38,7 +38,10 @@ export function createCategoryModal() {
         }
         overlay.classList.add("opacity-0");
         panel.classList.add("scale-95", "translate-y-4");
-        setTimeout(() => overlay.classList.add("hidden"), 180);
+        setTimeout(() => {
+            overlay.classList.add("hidden");
+            overlay.classList.remove("flex");
+        }, 180);
     };
 
     const show = () => {
@@ -46,6 +49,7 @@ export function createCategoryModal() {
             return;
         }
         overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
         requestAnimationFrame(() => {
             overlay.classList.remove("opacity-0");
             panel.classList.remove("scale-95", "translate-y-4");
@@ -58,7 +62,10 @@ export function createCategoryModal() {
         }
         confirmOverlay.classList.add("opacity-0");
         confirmPanel.classList.add("scale-95", "translate-y-4");
-        setTimeout(() => confirmOverlay.classList.add("hidden"), 180);
+        setTimeout(() => {
+            confirmOverlay.classList.add("hidden");
+            confirmOverlay.classList.remove("flex");
+        }, 180);
     };
 
     const showConfirm = () => {
@@ -66,6 +73,7 @@ export function createCategoryModal() {
             return;
         }
         confirmOverlay.classList.remove("hidden");
+        confirmOverlay.classList.add("flex");
         requestAnimationFrame(() => {
             confirmOverlay.classList.remove("opacity-0");
             confirmPanel.classList.remove("scale-95", "translate-y-4");

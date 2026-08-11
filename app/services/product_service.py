@@ -21,8 +21,9 @@ class ProductService:
         page_size: int = 20,
         search: str | None = None,
         category_id: int | None = None,
+        is_active: bool | None = None,
     ) -> tuple[list[Product], int]:
-        """Return paginated products with optional name search and category filtering."""
+        """Return paginated products with optional name search, category, and active-status filtering."""
         if page < 1:
             raise ValidationError("Page must be greater than or equal to 1.")
         if page_size < 1 or page_size > 100:
@@ -33,6 +34,8 @@ class ProductService:
             conditions.append(Product.name.ilike(f"%{search.strip()}%"))
         if category_id is not None:
             conditions.append(Product.category_id == category_id)
+        if is_active is not None:
+            conditions.append(Product.is_active == is_active)
 
         items_stmt = select(Product)
         count_stmt = select(func.count(Product.id))
@@ -105,9 +108,28 @@ class ProductService:
         self.db.delete(product)
         try:
             self.db.commit()
+        except IntegrityError as exc:
+            self.db.rollback()
+            raise ConflictError(
+                f"Product {product_id} could not be deleted because it has associated sale records."
+            ) from exc
         except SQLAlchemyError as exc:
             self.db.rollback()
             raise ServiceError("Unexpected database error while deleting product.") from exc
+
+    def set_active_status(self, product_id: int, is_active: bool) -> Product:
+        """Activate or deactivate a product without touching its sale history."""
+        product = self.get_product(product_id)
+        product.is_active = is_active
+
+        try:
+            self.db.commit()
+        except SQLAlchemyError as exc:
+            self.db.rollback()
+            raise ServiceError("Unexpected database error while updating product status.") from exc
+
+        self.db.refresh(product)
+        return product
 
     def adjust_stock(self, product_id: int, delta: int) -> Product:
         """Adjust stock by delta while preventing negative stock levels."""

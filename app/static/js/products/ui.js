@@ -64,9 +64,11 @@ export function renderProducts(tableBody, products, categoriesById) {
         .map((product) => {
             const status = stockStatus(product.stock_quantity);
             const categoryName = categoriesById.get(product.category_id) || `Categoría #${product.category_id}`;
+            const inactive = product.is_active === false;
+            const toggleLabel = inactive ? "Activar" : "Desactivar";
 
             return `
-                <tr class="transition-colors hover:bg-slate-800/50">
+                <tr class="transition-colors hover:bg-slate-800/50 ${inactive ? "opacity-60" : ""}">
                     <td class="px-3 py-3">
                         <div class="flex items-center gap-3">
                             <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/25 to-cyan-500/20 text-xs font-semibold text-brand-200 ring-1 ring-brand-500/40">${initials(product.name)}</div>
@@ -81,13 +83,16 @@ export function renderProducts(tableBody, products, categoriesById) {
                     <td class="px-3 py-3 text-slate-200">${currency(product.cost)}</td>
                     <td class="px-3 py-3 text-slate-200">${currency(product.sale_price)}</td>
                     <td class="px-3 py-3">
-                        <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}">${status.label}</span>
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${status.className}">${status.label}</span>
+                            ${inactive ? '<span class="inline-flex rounded-full bg-slate-700/60 px-2.5 py-1 text-xs font-medium text-slate-300 ring-1 ring-slate-600">Inactivo</span>' : ""}
+                        </div>
                     </td>
                     <td class="px-3 py-3">
                         <div class="flex items-center justify-end gap-2">
-                            <button data-action="view" data-id="${product.id}" class="saas-btn saas-btn-muted rounded-lg px-2.5 py-1.5 text-xs">Ver</button>
                             <button data-action="edit" data-id="${product.id}" class="saas-btn saas-btn-primary rounded-lg px-2.5 py-1.5 text-xs">Editar</button>
-                            <button data-action="delete" data-id="${product.id}" class="saas-btn saas-btn-danger rounded-lg px-2.5 py-1.5 text-xs">Eliminar</button>
+                            <button data-action="toggle-active" data-id="${product.id}" data-name="${product.name}" data-active="${product.is_active}" class="saas-btn saas-btn-muted rounded-lg px-2.5 py-1.5 text-xs">${toggleLabel}</button>
+                            <button data-action="delete" data-id="${product.id}" data-name="${product.name}" class="saas-btn saas-btn-danger rounded-lg px-2.5 py-1.5 text-xs">Eliminar</button>
                         </div>
                     </td>
                 </tr>

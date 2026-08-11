@@ -24,7 +24,14 @@ export function createProductModal() {
     const fieldInputs = Array.from(document.querySelectorAll(".product-field"));
     const categorySelect = document.getElementById("product-category");
 
+    const confirmOverlay = document.getElementById("product-confirm-overlay");
+    const confirmPanel = document.getElementById("product-confirm-panel");
+    const confirmMessage = document.getElementById("product-confirm-message");
+    const confirmDeleteButton = document.getElementById("confirm-product-delete");
+    const cancelDeleteButton = document.getElementById("cancel-product-delete");
+
     let mode = "create";
+    let deleteTargetId = null;
 
     const hide = () => {
         if (!overlay || !panel) {
@@ -32,7 +39,10 @@ export function createProductModal() {
         }
         overlay.classList.add("opacity-0");
         panel.classList.add("scale-95", "translate-y-4");
-        setTimeout(() => overlay.classList.add("hidden"), 180);
+        setTimeout(() => {
+            overlay.classList.add("hidden");
+            overlay.classList.remove("flex");
+        }, 180);
     };
 
     const show = () => {
@@ -40,10 +50,43 @@ export function createProductModal() {
             return;
         }
         overlay.classList.remove("hidden");
+        overlay.classList.add("flex");
         requestAnimationFrame(() => {
             overlay.classList.remove("opacity-0");
             panel.classList.remove("scale-95", "translate-y-4");
         });
+    };
+
+    const hideConfirm = () => {
+        if (!confirmOverlay || !confirmPanel) {
+            return;
+        }
+        confirmOverlay.classList.add("opacity-0");
+        confirmPanel.classList.add("scale-95", "translate-y-4");
+        setTimeout(() => {
+            confirmOverlay.classList.add("hidden");
+            confirmOverlay.classList.remove("flex");
+        }, 180);
+    };
+
+    const showConfirm = () => {
+        if (!confirmOverlay || !confirmPanel) {
+            return;
+        }
+        confirmOverlay.classList.remove("hidden");
+        confirmOverlay.classList.add("flex");
+        requestAnimationFrame(() => {
+            confirmOverlay.classList.remove("opacity-0");
+            confirmPanel.classList.remove("scale-95", "translate-y-4");
+        });
+    };
+
+    const askDelete = (productId, productName) => {
+        deleteTargetId = productId;
+        if (confirmMessage) {
+            confirmMessage.textContent = `¿Estás seguro de que deseas eliminar '${productName}'?`;
+        }
+        showConfirm();
     };
 
     const resetErrors = () => {
@@ -146,9 +189,21 @@ export function createProductModal() {
         }
     });
 
+    cancelDeleteButton?.addEventListener("click", hideConfirm);
+    confirmOverlay?.addEventListener("click", (event) => {
+        if (event.target === confirmOverlay) {
+            hideConfirm();
+        }
+    });
+
     document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && overlay && !overlay.classList.contains("hidden")) {
-            hide();
+        if (event.key === "Escape") {
+            if (overlay && !overlay.classList.contains("hidden")) {
+                hide();
+            }
+            if (confirmOverlay && !confirmOverlay.classList.contains("hidden")) {
+                hideConfirm();
+            }
         }
     });
 
@@ -166,5 +221,8 @@ export function createProductModal() {
         markInvalidFields,
         getMode: () => mode,
         getProductId: () => Number(productIdInput.value),
+        askDelete,
+        hideConfirm,
+        onConfirmDelete: (handler) => confirmDeleteButton?.addEventListener("click", () => handler(deleteTargetId)),
     };
 }

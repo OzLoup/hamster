@@ -255,3 +255,95 @@ def test_delete_product_returns_404_when_missing(client):
     # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == f"Product {missing_id} was not found."
+
+
+def test_create_product_defaults_to_active(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    request_body = product_request_body(category_id=category.id, sku="PRD-950")
+
+    # Act
+    response = client.post(BASE_URL, json=request_body)
+
+    # Assert
+    assert response.status_code == 201
+    assert response.json()["is_active"] is True
+
+
+def test_deactivate_product_returns_200_and_flips_is_active(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    product = create_product(db_session, category_id=category.id, sku="PRD-951")
+
+    # Act
+    response = client.post(f"{BASE_URL}/{product.id}/deactivate")
+
+    # Assert
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["id"] == product.id
+    assert payload["is_active"] is False
+
+    # A deactivated product is still retrievable, not deleted.
+    check = client.get(f"{BASE_URL}/{product.id}")
+    assert check.status_code == 200
+    assert check.json()["is_active"] is False
+
+
+def test_activate_product_returns_200_and_flips_is_active(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    product = create_product(db_session, category_id=category.id, sku="PRD-952")
+    client.post(f"{BASE_URL}/{product.id}/deactivate")
+
+    # Act
+    response = client.post(f"{BASE_URL}/{product.id}/activate")
+
+    # Assert
+    assert response.status_code == 200
+    assert response.json()["is_active"] is True
+
+
+def test_deactivate_product_returns_404_when_missing(client):
+    # Arrange
+    missing_id = 9977
+
+    # Act
+    response = client.post(f"{BASE_URL}/{missing_id}/deactivate")
+
+    # Assert
+    assert response.status_code == 404
+    assert response.json()["detail"] == f"Product {missing_id} was not found."
+
+
+def test_deactivated_product_can_still_be_deleted_when_it_has_no_sales(client, db_session):
+    # Arrange: deactivating is not a prerequisite for deletion; both remain independent actions.
+    category = create_category(db_session)
+    product = create_product(db_session, category_id=category.id, sku="PRD-953")
+    client.post(f"{BASE_URL}/{product.id}/deactivate")
+
+    # Act
+    response = client.delete(f"{BASE_URL}/{product.id}")
+
+    # Assert
+    assert response.status_code == 204
+
+
+def test_list_products_filters_by_is_active(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    active_product = create_product(db_session, category_id=category.id, sku="PRD-960")
+    inactive_product = create_product(db_session, category_id=category.id, sku="PRD-961")
+    client.post(f"{BASE_URL}/{inactive_product.id}/deactivate")
+
+    # Act
+    active_response = client.get(BASE_URL, params={"is_active": "true"})
+    inactive_response = client.get(BASE_URL, params={"is_active": "false"})
+
+    # Assert
+    active_ids = [item["id"] for item in active_response.json()["items"]]
+    inactive_ids = [item["id"] for item in inactive_response.json()["items"]]
+    assert active_product.id in active_ids
+    assert inactive_product.id not in active_ids
+    assert inactive_product.id in inactive_ids
+    assert active_product.id not in inactive_ids

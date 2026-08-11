@@ -178,6 +178,20 @@
         </form>
     </div>
 </div>
+
+<div
+    id="product-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="product-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 class="text-lg font-semibold text-white">Eliminar producto</h3>
+        <p id="product-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro de que deseas eliminar este producto?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-product-delete" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-product-delete" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Eliminar</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

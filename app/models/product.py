@@ -1,7 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, ForeignKey, Numeric, String, func
+from sqlalchemy import Boolean, DateTime, ForeignKey, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
@@ -16,6 +16,7 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(150), nullable=False, index=True)
     sku: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
     stock_quantity: Mapped[int] = mapped_column(default=0, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true", nullable=False)
 
     cost: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     sale_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)

@@ -1,6 +1,8 @@
 import {
+    activateProduct,
     ApiError,
     createProduct,
+    deactivateProduct,
     deleteProduct,
     fetchCategories,
     fetchProductById,
@@ -27,7 +29,6 @@ const openModalButton = document.getElementById("open-product-modal");
 let searchDebounceTimer;
 let categoriesById = new Map();
 let categories = [];
-let pendingDeleteId = null;
 
 function notify(type, message, duration = 3200) {
     window.showToast?.({ type, message, duration });
@@ -88,50 +89,64 @@ function handleTableActions(event) {
     const productId = Number(button.dataset.id);
     const action = button.dataset.action;
 
-    if (action === "view") {
-        notify("info", `La acción Ver para el producto #${productId} aún no está implementada.`);
-        return;
-    }
-
     if (action === "edit") {
         openEditModal(productId);
         return;
     }
 
-    if (action === "delete") {
-        if (pendingDeleteId !== productId) {
-            pendingDeleteId = productId;
-            notify("warning", "Haz clic en Eliminar nuevamente para confirmar la eliminación del producto.", 2600);
-            return;
-        }
+    if (action === "toggle-active") {
+        const isCurrentlyActive = button.dataset.active === "true";
+        toggleProductActive(productId, isCurrentlyActive);
+        return;
+    }
 
-        pendingDeleteId = null;
-        deleteProduct(productId)
-            .then(() => {
-                notify("success", "Producto eliminado correctamente.");
-                if (state.page > 1 && state.total <= (state.page - 1) * state.pageSize + 1) {
-                    state.page -= 1;
-                }
-                return loadProducts();
-            })
-            .catch((error) => {
-                if (errorBox) {
-                    showError(errorBox, error.message || "No se pudo eliminar el producto.");
-                }
-                notify("error", error.message || "No se pudo eliminar el producto.");
-            });
+    if (action === "delete") {
+        const productName = button.dataset.name || "este producto";
+        modal.askDelete(productId, productName);
     }
 }
 
-document.addEventListener("click", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
+async function toggleProductActive(productId, isCurrentlyActive) {
+    try {
+        if (isCurrentlyActive) {
+            await deactivateProduct(productId);
+            notify("success", "Producto desactivado. Ya no aparecerá disponible para vender.");
+        } else {
+            await activateProduct(productId);
+            notify("success", "Producto activado nuevamente.");
+        }
+        await loadProducts();
+    } catch (error) {
+        showError(errorBox, error.message || "No se pudo actualizar el estado del producto.");
+        notify("error", error.message || "No se pudo actualizar el estado del producto.");
+    }
+}
+
+async function confirmDelete(productId) {
+    if (!productId) {
         return;
     }
-    if (!target.closest("button[data-action='delete']")) {
-        pendingDeleteId = null;
+
+    try {
+        await deleteProduct(productId);
+        modal.hideConfirm();
+        notify("success", "Producto eliminado correctamente.");
+        if (state.page > 1 && state.total <= (state.page - 1) * state.pageSize + 1) {
+            state.page -= 1;
+        }
+        await loadProducts();
+    } catch (error) {
+        modal.hideConfirm();
+        const message =
+            error?.status === 409
+                ? "No se puede eliminar este producto porque tiene ventas registradas asociadas."
+                : error.message || "No se pudo eliminar el producto.";
+        if (errorBox) {
+            showError(errorBox, message);
+        }
+        notify("error", message);
     }
-});
+}
 
 async function openEditModal(productId) {
     try {
@@ -236,6 +251,7 @@ function wireEvents() {
 
     tableBody?.addEventListener("click", handleTableActions);
     modal.form?.addEventListener("submit", handleSubmitProduct);
+    modal.onConfirmDelete(confirmDelete);
 }
 
 wireEvents();

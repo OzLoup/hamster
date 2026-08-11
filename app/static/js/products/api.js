@@ -115,6 +115,30 @@ export async function deleteProduct(productId) {
     await assertOk(response);
 }
 
+export async function deactivateProduct(productId) {
+    const response = await fetch(`${PRODUCTS_API_BASE}/${productId}/deactivate`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+
+    await assertOk(response);
+    return response.json();
+}
+
+export async function activateProduct(productId) {
+    const response = await fetch(`${PRODUCTS_API_BASE}/${productId}/activate`, {
+        method: "POST",
+        headers: {
+            Accept: "application/json",
+        },
+    });
+
+    await assertOk(response);
+    return response.json();
+}
+
 export async function fetchCategories() {
     const response = await fetch(CATEGORIES_API_BASE, {
         headers: {

@@ -231,3 +231,77 @@ def test_delete_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     with pytest.raises(ServiceError, match="Unexpected database error while deleting product"):
         service.delete_product(20)
     db.rollback.assert_called_once()
+
+
+def test_set_active_status_deactivates_and_reactivates_product(service, db_session):
+    # Arrange
+    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    product = service.create_product(_build_product_create_payload(category.id))
+    assert product.is_active is True
+
+    # Act
+    deactivated = service.set_active_status(product.id, False)
+
+    # Assert
+    assert deactivated.is_active is False
+
+    # Act
+    reactivated = service.set_active_status(product.id, True)
+
+    # Assert
+    assert reactivated.is_active is True
+
+
+def test_set_active_status_missing_product_raises_not_found(service):
+    # Act / Assert
+    with pytest.raises(NotFoundError, match="Product 999 was not found"):
+        service.set_active_status(999, False)
+
+
+def test_set_active_status_sqlalchemy_error_raises_service_error_and_rolls_back():
+    # Arrange
+    existing = Product(
+        id=22,
+        category_id=1,
+        name="Mechanical Keyboard",
+        sku="KB-102",
+        stock_quantity=10,
+        is_active=True,
+        cost=Decimal("40.00"),
+        sale_price=Decimal("79.99"),
+    )
+
+    db = MagicMock()
+    db.get.return_value = existing
+    db.commit.side_effect = SQLAlchemyError("db down")
+
+    service = ProductService(db)
+
+    # Act / Assert
+    with pytest.raises(ServiceError, match="Unexpected database error while updating product status"):
+        service.set_active_status(22, False)
+    db.rollback.assert_called_once()
+
+
+def test_delete_product_integrity_error_raises_conflict_and_rolls_back():
+    # Arrange: deleting a product still referenced by sale_items violates the FK constraint.
+    existing = Product(
+        id=21,
+        category_id=1,
+        name="Mechanical Keyboard",
+        sku="KB-101",
+        stock_quantity=10,
+        cost=Decimal("40.00"),
+        sale_price=Decimal("79.99"),
+    )
+
+    db = MagicMock()
+    db.get.return_value = existing
+    db.commit.side_effect = IntegrityError("DELETE", {}, Exception("foreign key constraint"))
+
+    service = ProductService(db)
+
+    # Act / Assert
+    with pytest.raises(ConflictError, match="could not be deleted because it has associated sale records"):
+        service.delete_product(21)
+    db.rollback.assert_called_once()

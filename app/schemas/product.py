@@ -33,6 +33,7 @@ class ProductRead(TimestampedResponse):
     name: str
     sku: str
     stock_quantity: int
+    is_active: bool
     cost: Decimal
     sale_price: Decimal
 
