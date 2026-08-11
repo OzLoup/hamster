@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Cuentas abiertas | {{ app_name }}{% endblock %}
+
+{% block page_header %}
+<section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Ventas por grupo</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Cuentas abiertas</h2>
+            <p class="mt-2 max-w-2xl text-sm text-slate-300">Lleva la cuenta de mesas, clientes fiados o cualquier venta que se acumule antes de cobrarse. Agrega productos libremente y cierra la cuenta cuando se pague.</p>
+        </div>
+        <div class="flex justify-end">
+            <button id="open-new-tab" type="button" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
+                </svg>
+                Nueva cuenta
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section>
+    <div id="open-tabs-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <div id="open-tabs-grid" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div class="saas-card rounded-3xl p-6">
+            <div class="saas-empty animate-pulseSoft">Cargando cuentas abiertas...</div>
+        </div>
+    </div>
+</section>
+
+<!-- Create tab modal -->
+<div
+    id="tab-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="tab-modal-panel"
+        class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tab-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="tab-modal-title" class="text-lg font-semibold text-white">Nueva cuenta</h3>
+                <p class="text-xs text-slate-400">Ponle un nombre: una mesa, un cliente fiado o cualquier grupo de ventas.</p>
+            </div>
+            <button
+                id="close-tab-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="tab-form" class="space-y-4 px-5 py-5 sm:px-6" novalidate>
+            <div id="tab-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="tab-name-input" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre de la cuenta</label>
+                <input id="tab-name-input" name="name" type="text" class="saas-input" placeholder="Mesa 1, Fulanito, Mostrador..." />
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+                <button id="cancel-tab-modal" type="button" class="saas-btn saas-btn-muted px-4 py-2.5 text-sm">Cancelar</button>
+                <button id="submit-tab" type="submit" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+                    <svg id="tab-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                    </svg>
+                    <span id="tab-submit-label">Crear cuenta</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Manage tab modal -->
+<div
+    id="tab-manage-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="tab-manage-panel"
+        class="flex max-h-[90vh] w-full max-w-3xl scale-95 flex-col rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="tab-manage-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="tab-manage-title" class="text-lg font-semibold text-white">Cuenta</h3>
+                <p class="text-xs text-slate-400">Agrega productos y cobra cuando esté lista.</p>
+            </div>
+            <button
+                id="close-tab-manage"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="overflow-y-auto px-5 py-5 sm:px-6">
+            <div id="tab-manage-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+            <div id="tab-manage-success" class="mb-4 hidden rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200" role="status" aria-live="polite"></div>
+
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
+                <div class="grid gap-3 sm:grid-cols-5">
+                    <div class="relative sm:col-span-3">
+                        <label for="tab-item-product-search" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Producto</label>
+                        <input
+                            id="tab-item-product-search"
+                            type="text"
+                            autocomplete="off"
+                            placeholder="Busca un producto por nombre"
+                            class="saas-input"
+                            role="combobox"
+                            aria-expanded="false"
+                            aria-controls="tab-item-product-options"
+                            aria-autocomplete="list"
+                        />
+                        <input type="hidden" id="tab-item-product-id" />
+                        <div
+                            id="tab-item-product-options"
+                            role="listbox"
+                            class="absolute z-20 mt-1 hidden max-h-56 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-glow divide-y divide-slate-800"
+                        ></div>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="tab-item-quantity" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Cantidad</label>
+                        <input id="tab-item-quantity" type="number" min="1" value="1" class="saas-input" />
+                    </div>
+                    <div class="sm:col-span-1 flex items-end">
+                        <button id="add-tab-item" type="button" class="saas-btn saas-btn-primary w-full px-4 py-2.5 text-sm">Agregar</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="saas-table-wrap mt-5 overflow-x-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead>
+                        <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
+                            <th class="px-3 py-3 font-medium">Producto</th>
+                            <th class="px-3 py-3 font-medium">Precio unitario</th>
+                            <th class="px-3 py-3 font-medium">Cantidad</th>
+                            <th class="px-3 py-3 font-medium">Subtotal</th>
+                            <th class="px-3 py-3 font-medium text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tab-items-body" class="divide-y divide-slate-800 text-slate-200">
+                        <tr>
+                            <td colspan="5" class="px-3 py-8">
+                                <div class="saas-empty">Aún no hay productos en esta cuenta.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-950/50 p-4 sm:flex-row sm:items-end sm:justify-between">
+                <div class="flex items-center justify-between gap-4 sm:justify-start">
+                    <span class="text-sm text-slate-400">Total de la cuenta</span>
+                    <span id="tab-manage-total" class="text-lg font-semibold text-emerald-300">$ 0</span>
+                </div>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                    <div class="w-full sm:w-56">
+                        <label for="tab-manage-payment" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Método de pago</label>
+                        <select id="tab-manage-payment" class="saas-select">
+                            <option value="">Selecciona un método de pago</option>
+                            <option value="cash">Efectivo</option>
+                            <option value="card">Tarjeta</option>
+                            <option value="nequi">Nequi</option>
+                            <option value="daviplata">Daviplata</option>
+                            <option value="bre_b">Bre-B</option>
+                        </select>
+                    </div>
+                    <button id="close-tab-button" type="button" class="saas-btn rounded-xl border border-emerald-500/50 bg-emerald-500/20 px-4 py-2.5 text-sm font-semibold text-emerald-100 transition hover:bg-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60">
+                        <svg id="close-tab-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                        </svg>
+                        <span id="close-tab-label">Cobrar y cerrar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Confirm delete tab modal -->
+<div
+    id="tab-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="tab-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 class="text-lg font-semibold text-white">Eliminar cuenta</h3>
+        <p id="tab-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro de que deseas eliminar esta cuenta?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-tab-delete" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-tab-delete" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Eliminar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/open-tabs/page.js') }}"></script>
+{% endblock %}

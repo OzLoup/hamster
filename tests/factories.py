@@ -126,6 +126,14 @@ def purchase_request_body(
     }
 
 
+def open_tab_request_body(*, name: str = "Mesa 1") -> dict:
+    return {"name": name}
+
+
+def open_tab_item_request_body(*, product_id: int, quantity: int = 1) -> dict:
+    return {"product_id": product_id, "quantity": quantity}
+
+
 def sale_request_body(
     *,
     reference: str,

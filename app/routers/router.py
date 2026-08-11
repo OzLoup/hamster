@@ -5,6 +5,7 @@ from app.routers.auth import router as auth_router
 from app.routers.categories import router as categories_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.health import router as health_router
+from app.routers.open_tabs import router as open_tabs_router
 from app.routers.products import router as products_router
 from app.routers.purchases import router as purchases_router
 from app.routers.sales import router as sales_router
@@ -20,3 +21,4 @@ api_router.include_router(purchases_router)
 api_router.include_router(dashboard_router)
 api_router.include_router(app_settings_router)
 api_router.include_router(auth_router)
+api_router.include_router(open_tabs_router)

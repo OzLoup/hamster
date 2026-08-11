@@ -31,3 +31,4 @@ class Product(Base):
     category: Mapped["Category"] = relationship(back_populates="products")
     sale_items: Mapped[list["SaleItem"]] = relationship(back_populates="product")
     purchase_items: Mapped[list["PurchaseItem"]] = relationship(back_populates="product")
+    open_tab_items: Mapped[list["OpenTabItem"]] = relationship(back_populates="product")

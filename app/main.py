@@ -82,6 +82,11 @@ def purchases_page(request: Request, db: Session = Depends(get_db)) -> HTMLRespo
     return render_page(request, "pages/purchases.html", db)
 
 
+@app.get("/open-tabs", response_class=HTMLResponse)
+def open_tabs_page(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
+    return render_page(request, "pages/open_tabs.html", db)
+
+
 @app.get("/reports", response_class=HTMLResponse)
 def reports_page(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
     return render_page(request, "pages/reports.html", db)

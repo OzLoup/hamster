@@ -1,5 +1,7 @@
 from app.models.app_settings import AppSettings
 from app.models.category import Category
+from app.models.open_tab import OpenTab
+from app.models.open_tab_item import OpenTabItem
 from app.models.product import Product
 from app.models.purchase import Purchase
 from app.models.purchase_item import PurchaseItem
@@ -11,6 +13,8 @@ from app.models.user import User
 __all__ = [
     "AppSettings",
     "Category",
+    "OpenTab",
+    "OpenTabItem",
     "Product",
     "Purchase",
     "PurchaseItem",

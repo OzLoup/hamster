@@ -1,6 +1,13 @@
 from app.schemas.app_settings import AppSettingsRead, AppSettingsUpdate
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 from app.schemas.dashboard import DashboardSummary, LowStockProduct, MetricInsight
+from app.schemas.open_tab import (
+    OpenTabCloseRequest,
+    OpenTabCreate,
+    OpenTabItemCreate,
+    OpenTabItemRead,
+    OpenTabRead,
+)
 from app.schemas.product import ProductCreate, ProductListResponse, ProductRead, ProductUpdate
 from app.schemas.purchase import PurchaseCreate, PurchaseRead, PurchaseUpdate
 from app.schemas.purchase_item import PurchaseItemCreate, PurchaseItemRead
@@ -18,6 +25,11 @@ __all__ = [
     "DashboardSummary",
     "LowStockProduct",
     "MetricInsight",
+    "OpenTabCloseRequest",
+    "OpenTabCreate",
+    "OpenTabItemCreate",
+    "OpenTabItemRead",
+    "OpenTabRead",
     "ProductCreate",
     "ProductListResponse",
     "ProductRead",

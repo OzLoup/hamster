@@ -5,6 +5,7 @@ from app.core.dependencies import get_db
 from app.services.app_settings_service import AppSettingsService
 from app.services.category_service import CategoryService
 from app.services.dashboard_service import DashboardService
+from app.services.open_tab_service import OpenTabService
 from app.services.product_service import ProductService
 from app.services.purchase_service import PurchaseService
 from app.services.sale_service import SaleService
@@ -44,3 +45,8 @@ def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
 def get_app_settings_service(db: Session = Depends(get_db)) -> AppSettingsService:
     """Dependency provider for app settings service."""
     return AppSettingsService(db)
+
+
+def get_open_tab_service(db: Session = Depends(get_db)) -> OpenTabService:
+    """Dependency provider for open tab service."""
+    return OpenTabService(db)
