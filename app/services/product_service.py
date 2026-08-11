@@ -9,6 +9,17 @@ from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 
+LOW_STOCK_MAX = 10
+MEDIUM_STOCK_MAX = 30
+
+SORTABLE_COLUMNS = {
+    "name": Product.name,
+    "category": Category.name,
+    "stock_quantity": Product.stock_quantity,
+    "cost": Product.cost,
+    "sale_price": Product.sale_price,
+}
+
 
 class ProductService:
     """Handles product and inventory business operations independent from API routes."""
@@ -24,8 +35,11 @@ class ProductService:
         search: str | None = None,
         category_id: int | None = None,
         is_active: bool | None = None,
+        stock_level: str | None = None,
+        sort_by: str | None = None,
+        sort_dir: str = "asc",
     ) -> tuple[list[Product], int]:
-        """Return paginated products with optional name search, category, and active-status filtering."""
+        """Return paginated products with optional filtering and sorting."""
         if page < 1:
             raise ValidationError("Page must be greater than or equal to 1.")
         if page_size < 1 or page_size > 100:
@@ -38,6 +52,12 @@ class ProductService:
             conditions.append(Product.category_id == category_id)
         if is_active is not None:
             conditions.append(Product.is_active == is_active)
+        if stock_level == "low":
+            conditions.append(Product.stock_quantity <= LOW_STOCK_MAX)
+        elif stock_level == "medium":
+            conditions.append(Product.stock_quantity.between(LOW_STOCK_MAX + 1, MEDIUM_STOCK_MAX))
+        elif stock_level == "good":
+            conditions.append(Product.stock_quantity > MEDIUM_STOCK_MAX)
 
         items_stmt = select(Product)
         count_stmt = select(func.count(Product.id))
@@ -45,7 +65,15 @@ class ProductService:
             items_stmt = items_stmt.where(*conditions)
             count_stmt = count_stmt.where(*conditions)
 
-        items_stmt = items_stmt.order_by(Product.id).offset((page - 1) * page_size).limit(page_size)
+        order_column = SORTABLE_COLUMNS.get(sort_by)
+        if order_column is not None:
+            if sort_by == "category":
+                items_stmt = items_stmt.join(Category, Category.id == Product.category_id)
+            order_clauses = [order_column.desc() if sort_dir == "desc" else order_column.asc(), Product.id.asc()]
+        else:
+            order_clauses = [Product.id.asc()]
+
+        items_stmt = items_stmt.order_by(*order_clauses).offset((page - 1) * page_size).limit(page_size)
         products = list(self.db.scalars(items_stmt).all())
         total = int(self.db.scalar(count_stmt) or 0)
         return products, total

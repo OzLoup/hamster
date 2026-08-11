@@ -25,6 +25,10 @@ const meta = document.getElementById("products-meta");
 const searchInput = document.getElementById("product-search");
 const errorBox = document.getElementById("products-error");
 const openModalButton = document.getElementById("open-product-modal");
+const categoryFilterSelect = document.getElementById("product-filter-category");
+const stockFilterSelect = document.getElementById("product-filter-stock");
+const activeFilterSelect = document.getElementById("product-filter-active");
+const sortButtons = Array.from(document.querySelectorAll(".product-sort-btn"));
 
 let searchDebounceTimer;
 let categoriesById = new Map();
@@ -34,15 +38,64 @@ function notify(type, message, duration = 3200) {
     window.showToast?.({ type, message, duration });
 }
 
+function updateSortIndicators() {
+    sortButtons.forEach((button) => {
+        const indicator = button.querySelector(".sort-indicator");
+        if (!indicator) {
+            return;
+        }
+        if (button.dataset.sortField !== state.sortBy) {
+            indicator.textContent = "";
+            button.classList.remove("text-slate-200");
+            button.classList.add("text-slate-400");
+            return;
+        }
+        indicator.textContent = state.sortDir === "desc" ? "↓" : "↑";
+        button.classList.remove("text-slate-400");
+        button.classList.add("text-slate-200");
+    });
+}
+
+function handleSortClick(event) {
+    const button = event.currentTarget;
+    const field = button.dataset.sortField;
+    if (!field) {
+        return;
+    }
+
+    if (state.sortBy === field) {
+        state.sortDir = state.sortDir === "asc" ? "desc" : "asc";
+    } else {
+        state.sortBy = field;
+        state.sortDir = "asc";
+    }
+
+    state.page = 1;
+    updateSortIndicators();
+    loadProducts();
+}
+
+function populateCategoryFilter() {
+    if (!categoryFilterSelect) {
+        return;
+    }
+    categoryFilterSelect.innerHTML = [
+        '<option value="">Todas las categorías</option>',
+        ...categories.map((category) => `<option value="${category.id}">${category.name}</option>`),
+    ].join("");
+}
+
 async function loadCategories() {
     try {
         categories = await fetchCategories();
         categoriesById = new Map(categories.map((category) => [category.id, category.name]));
         modal.setCategories(categories);
+        populateCategoryFilter();
     } catch {
         categories = [];
         categoriesById = new Map();
         modal.setCategories([]);
+        populateCategoryFilter();
     }
 }
 
@@ -57,6 +110,11 @@ async function loadProducts() {
             page: state.page,
             pageSize: state.pageSize,
             search: state.search,
+            categoryId: state.categoryId,
+            stockLevel: state.stockLevel,
+            isActive: state.isActive,
+            sortBy: state.sortBy,
+            sortDir: state.sortDir,
         });
 
         state.total = payload.total;
@@ -248,6 +306,26 @@ function wireEvents() {
             loadProducts();
         }, 300);
     });
+
+    categoryFilterSelect?.addEventListener("change", () => {
+        state.categoryId = categoryFilterSelect.value;
+        state.page = 1;
+        loadProducts();
+    });
+
+    stockFilterSelect?.addEventListener("change", () => {
+        state.stockLevel = stockFilterSelect.value;
+        state.page = 1;
+        loadProducts();
+    });
+
+    activeFilterSelect?.addEventListener("change", () => {
+        state.isActive = activeFilterSelect.value;
+        state.page = 1;
+        loadProducts();
+    });
+
+    sortButtons.forEach((button) => button.addEventListener("click", handleSortClick));
 
     tableBody?.addEventListener("click", handleTableActions);
     modal.form?.addEventListener("submit", handleSubmitProduct);

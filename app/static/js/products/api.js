@@ -46,12 +46,25 @@ async function assertOk(response) {
     throw new ApiError(parsed.message, response.status, parsed.details);
 }
 
-export async function fetchProducts({ page, pageSize, search }) {
+export async function fetchProducts({ page, pageSize, search, categoryId, stockLevel, isActive, sortBy, sortDir }) {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("page_size", String(pageSize));
     if (search) {
         params.set("search", search);
+    }
+    if (categoryId) {
+        params.set("category_id", String(categoryId));
+    }
+    if (stockLevel) {
+        params.set("stock_level", stockLevel);
+    }
+    if (isActive) {
+        params.set("is_active", isActive);
+    }
+    if (sortBy) {
+        params.set("sort_by", sortBy);
+        params.set("sort_dir", sortDir || "asc");
     }
 
     const response = await fetch(`${PRODUCTS_API_BASE}?${params.toString()}`, {

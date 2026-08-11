@@ -47,15 +47,66 @@
 <section class="saas-card rounded-3xl p-4 sm:p-6">
     <div id="products-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
 
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+        <div class="w-full sm:w-56">
+            <label for="product-filter-category" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Categoría</label>
+            <select id="product-filter-category" class="saas-select">
+                <option value="">Todas las categorías</option>
+            </select>
+        </div>
+        <div class="w-full sm:w-48">
+            <label for="product-filter-stock" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nivel de stock</label>
+            <select id="product-filter-stock" class="saas-select">
+                <option value="">Todo el stock</option>
+                <option value="low">Bajo</option>
+                <option value="medium">Medio</option>
+                <option value="good">En stock</option>
+            </select>
+        </div>
+        <div class="w-full sm:w-48">
+            <label for="product-filter-active" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Estado</label>
+            <select id="product-filter-active" class="saas-select">
+                <option value="">Todos los estados</option>
+                <option value="true">Activos</option>
+                <option value="false">Inactivos</option>
+            </select>
+        </div>
+    </div>
+
     <div class="saas-table-wrap overflow-x-auto">
         <table class="min-w-full text-left text-sm">
             <thead>
                 <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
-                    <th class="px-3 py-3 font-medium">Producto</th>
-                    <th class="px-3 py-3 font-medium">Categoría</th>
-                    <th class="px-3 py-3 font-medium">Stock</th>
-                    <th class="px-3 py-3 font-medium">Costo</th>
-                    <th class="px-3 py-3 font-medium">Precio de venta</th>
+                    <th class="px-3 py-3 font-medium">
+                        <button type="button" data-sort-field="name" class="product-sort-btn inline-flex items-center gap-1 text-slate-400 transition hover:text-slate-200">
+                            <span>Producto</span>
+                            <span class="sort-indicator text-[10px]"></span>
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 font-medium">
+                        <button type="button" data-sort-field="category" class="product-sort-btn inline-flex items-center gap-1 text-slate-400 transition hover:text-slate-200">
+                            <span>Categoría</span>
+                            <span class="sort-indicator text-[10px]"></span>
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 font-medium">
+                        <button type="button" data-sort-field="stock_quantity" class="product-sort-btn inline-flex items-center gap-1 text-slate-400 transition hover:text-slate-200">
+                            <span>Stock</span>
+                            <span class="sort-indicator text-[10px]"></span>
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 font-medium">
+                        <button type="button" data-sort-field="cost" class="product-sort-btn inline-flex items-center gap-1 text-slate-400 transition hover:text-slate-200">
+                            <span>Costo</span>
+                            <span class="sort-indicator text-[10px]"></span>
+                        </button>
+                    </th>
+                    <th class="px-3 py-3 font-medium">
+                        <button type="button" data-sort-field="sale_price" class="product-sort-btn inline-flex items-center gap-1 text-slate-400 transition hover:text-slate-200">
+                            <span>Precio de venta</span>
+                            <span class="sort-indicator text-[10px]"></span>
+                        </button>
+                    </th>
                     <th class="px-3 py-3 font-medium">Estado</th>
                     <th class="px-3 py-3 font-medium text-right">Acciones</th>
                 </tr>

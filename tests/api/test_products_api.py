@@ -325,3 +325,52 @@ def test_list_products_filters_by_is_active(client, db_session):
     assert inactive_product.id not in active_ids
     assert inactive_product.id in inactive_ids
     assert active_product.id not in inactive_ids
+
+
+def test_list_products_filters_by_stock_level(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    create_product(db_session, category_id=category.id, sku="STOCK-LOW", name="Low", stock_quantity=3)
+    create_product(db_session, category_id=category.id, sku="STOCK-MED", name="Medium", stock_quantity=20)
+    create_product(db_session, category_id=category.id, sku="STOCK-GOOD", name="Good", stock_quantity=200)
+
+    # Act
+    low_response = client.get(BASE_URL, params={"stock_level": "low"})
+    medium_response = client.get(BASE_URL, params={"stock_level": "medium"})
+    good_response = client.get(BASE_URL, params={"stock_level": "good"})
+
+    # Assert
+    assert [item["name"] for item in low_response.json()["items"]] == ["Low"]
+    assert [item["name"] for item in medium_response.json()["items"]] == ["Medium"]
+    assert [item["name"] for item in good_response.json()["items"]] == ["Good"]
+
+
+def test_list_products_returns_422_for_invalid_stock_level(client):
+    # Act
+    response = client.get(BASE_URL, params={"stock_level": "not-a-level"})
+
+    # Assert
+    assert response.status_code == 422
+
+
+def test_list_products_sorts_by_name_ascending_and_descending(client, db_session):
+    # Arrange
+    category = create_category(db_session)
+    create_product(db_session, category_id=category.id, sku="SORT-A", name="Alpha")
+    create_product(db_session, category_id=category.id, sku="SORT-B", name="Bravo")
+
+    # Act
+    asc_response = client.get(BASE_URL, params={"sort_by": "name", "sort_dir": "asc"})
+    desc_response = client.get(BASE_URL, params={"sort_by": "name", "sort_dir": "desc"})
+
+    # Assert
+    assert [item["name"] for item in asc_response.json()["items"]] == ["Alpha", "Bravo"]
+    assert [item["name"] for item in desc_response.json()["items"]] == ["Bravo", "Alpha"]
+
+
+def test_list_products_returns_422_for_invalid_sort_by(client):
+    # Act
+    response = client.get(BASE_URL, params={"sort_by": "not-a-column"})
+
+    # Assert
+    assert response.status_code == 422

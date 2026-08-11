@@ -9,7 +9,7 @@ from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.product_service import ProductService
-from tests.factories import create_category
+from tests.factories import create_category, create_product
 
 
 @pytest.fixture()
@@ -303,3 +303,91 @@ def test_delete_product_integrity_error_raises_conflict_and_rolls_back():
     with pytest.raises(ConflictError, match="could not be deleted because it has associated sale records"):
         service.delete_product(21)
     db.rollback.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("stock_level", "expected_names"),
+    [
+        ("low", ["Low Stock"]),
+        ("medium", ["Medium Stock"]),
+        ("good", ["Good Stock"]),
+        (None, ["Low Stock", "Medium Stock", "Good Stock"]),
+    ],
+)
+def test_list_products_filters_by_stock_level(service, db_session, stock_level, expected_names):
+    # Arrange
+    category = create_category(db_session, name="Electronics")
+    create_product(db_session, category_id=category.id, sku="SORT-001", name="Low Stock", stock_quantity=5)
+    create_product(db_session, category_id=category.id, sku="SORT-002", name="Medium Stock", stock_quantity=20)
+    create_product(db_session, category_id=category.id, sku="SORT-003", name="Good Stock", stock_quantity=100)
+
+    # Act
+    products, total = service.list_products(stock_level=stock_level)
+
+    # Assert
+    assert total == len(expected_names)
+    assert sorted(p.name for p in products) == sorted(expected_names)
+
+
+@pytest.mark.parametrize(
+    ("sort_by", "sort_dir", "expected_order"),
+    [
+        ("name", "asc", ["Alpha", "Bravo", "Charlie"]),
+        ("name", "desc", ["Charlie", "Bravo", "Alpha"]),
+        ("stock_quantity", "asc", ["Bravo", "Charlie", "Alpha"]),
+        ("stock_quantity", "desc", ["Alpha", "Charlie", "Bravo"]),
+        ("cost", "asc", ["Charlie", "Alpha", "Bravo"]),
+        ("sale_price", "desc", ["Bravo", "Alpha", "Charlie"]),
+        (None, "asc", ["Alpha", "Bravo", "Charlie"]),
+    ],
+)
+def test_list_products_sorts_by_requested_column(service, db_session, sort_by, sort_dir, expected_order):
+    # Arrange
+    category = create_category(db_session, name="Electronics")
+    create_product(
+        db_session,
+        category_id=category.id,
+        sku="SORT-ALPHA",
+        name="Alpha",
+        stock_quantity=50,
+        cost=Decimal("20.00"),
+        sale_price=Decimal("90.00"),
+    )
+    create_product(
+        db_session,
+        category_id=category.id,
+        sku="SORT-BRAVO",
+        name="Bravo",
+        stock_quantity=5,
+        cost=Decimal("30.00"),
+        sale_price=Decimal("100.00"),
+    )
+    create_product(
+        db_session,
+        category_id=category.id,
+        sku="SORT-CHARLIE",
+        name="Charlie",
+        stock_quantity=15,
+        cost=Decimal("10.00"),
+        sale_price=Decimal("50.00"),
+    )
+
+    # Act
+    products, _ = service.list_products(sort_by=sort_by, sort_dir=sort_dir)
+
+    # Assert
+    assert [p.name for p in products] == expected_order
+
+
+def test_list_products_sorts_by_category_name(service, db_session):
+    # Arrange
+    zeta_category = create_category(db_session, name="Zeta Category")
+    alpha_category = create_category(db_session, name="Alpha Category")
+    create_product(db_session, category_id=zeta_category.id, sku="SORT-CAT-1", name="In Zeta")
+    create_product(db_session, category_id=alpha_category.id, sku="SORT-CAT-2", name="In Alpha")
+
+    # Act
+    products, _ = service.list_products(sort_by="category", sort_dir="asc")
+
+    # Assert
+    assert [p.name for p in products] == ["In Alpha", "In Zeta"]

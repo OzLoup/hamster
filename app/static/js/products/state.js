@@ -5,5 +5,10 @@ export function createProductsState() {
         total: 0,
         totalPages: 1,
         search: "",
+        categoryId: "",
+        stockLevel: "",
+        isActive: "",
+        sortBy: "",
+        sortDir: "asc",
     };
 }

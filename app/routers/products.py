@@ -1,5 +1,5 @@
 from math import ceil
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 
@@ -16,6 +16,14 @@ PageSize = Annotated[int, Query(ge=1, le=100, description="Page size between 1 a
 Search = Annotated[str | None, Query(min_length=1, max_length=150, description="Search by product name")]
 CategoryFilter = Annotated[int | None, Query(ge=1, description="Filter by category id")]
 ActiveFilter = Annotated[bool | None, Query(description="Filter by active status")]
+StockLevelFilter = Annotated[
+    Literal["low", "medium", "good"] | None, Query(description="Filter by stock level band")
+]
+SortBy = Annotated[
+    Literal["name", "category", "stock_quantity", "cost", "sale_price"] | None,
+    Query(description="Field to sort by"),
+]
+SortDir = Annotated[Literal["asc", "desc"], Query(description="Sort direction")]
 
 
 def _raise_http_from_service_error(exc: Exception) -> None:
@@ -35,6 +43,9 @@ def list_products(
     search: Search = None,
     category_id: CategoryFilter = None,
     is_active: ActiveFilter = None,
+    stock_level: StockLevelFilter = None,
+    sort_by: SortBy = None,
+    sort_dir: SortDir = "asc",
     service: ProductService = Depends(get_product_service),
 ) -> ProductListResponse:
     try:
@@ -44,6 +55,9 @@ def list_products(
             search=search,
             category_id=category_id,
             is_active=is_active,
+            stock_level=stock_level,
+            sort_by=sort_by,
+            sort_dir=sort_dir,
         )
     except ServiceError as exc:
         _raise_http_from_service_error(exc)
