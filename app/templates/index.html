@@ -4,29 +4,25 @@
 
 {% block page_header %}
 <section class="saas-card mb-6 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-brand-900/40 p-6 sm:p-8">
-    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-            <p class="text-xs uppercase tracking-[0.2em] text-teal-300">Centro de operaciones</p>
-            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-4xl">{{ app_name }}</h2>
-            <p class="mt-2 max-w-2xl text-sm text-slate-300">
-                Panel de indicadores en tiempo real para inventario y ventas. Los valores a continuación son ejemplos precargados.
-            </p>
-        </div>
-        <div class="inline-flex items-center gap-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
-            <span class="h-2 w-2 animate-pulse rounded-full bg-emerald-300"></span>
-            Datos de demostración activados
-        </div>
+    <div>
+        <p class="text-xs uppercase tracking-[0.2em] text-teal-300">Centro de operaciones</p>
+        <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-4xl">{{ business_name }}</h2>
+        <p class="mt-2 max-w-2xl text-sm text-slate-300">
+            Panel de indicadores en tiempo real para inventario y ventas.
+        </p>
     </div>
 </section>
 {% endblock %}
 
 {% block content %}
+<div id="dashboard-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
 <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-400/60 hover:shadow-indigo-500/20">
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-xs uppercase tracking-wide text-slate-400">Total de productos</p>
-                <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_products if stats else 25 }}</p>
+                <p class="mt-3 text-3xl font-semibold text-white" id="stat-total-products">—</p>
             </div>
             <span class="rounded-xl bg-indigo-500/15 p-2.5 text-indigo-300 ring-1 ring-indigo-500/40 transition-transform duration-300 group-hover:scale-110">
                 <svg class="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -34,9 +30,9 @@
                 </svg>
             </span>
         </div>
-        <div class="mt-4 flex items-center gap-2 text-xs text-emerald-300">
-            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span>Catálogo saludable</span>
+        <div class="mt-4 flex items-center gap-2 text-xs" id="stat-catalog-health-wrap">
+            <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+            <span class="text-slate-400" id="stat-catalog-health-label">Cargando…</span>
         </div>
     </article>
 
@@ -44,7 +40,7 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-xs uppercase tracking-wide text-slate-400">Total de categorías</p>
-                <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_categories if stats else 5 }}</p>
+                <p class="mt-3 text-3xl font-semibold text-white" id="stat-total-categories">—</p>
             </div>
             <span class="rounded-xl bg-cyan-500/15 p-2.5 text-cyan-300 ring-1 ring-cyan-500/40 transition-transform duration-300 group-hover:scale-110">
                 <svg class="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -52,17 +48,18 @@
                 </svg>
             </span>
         </div>
-        <div class="mt-4 flex items-center gap-2 text-xs text-cyan-300">
-            <span class="h-2 w-2 rounded-full bg-cyan-400"></span>
-            <span>Agrupación equilibrada</span>
+        <div class="mt-4 flex items-center gap-2 text-xs" id="stat-category-balance-wrap">
+            <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+            <span class="text-slate-400" id="stat-category-balance-label">Cargando…</span>
         </div>
     </article>
 
     <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-violet-400/60 hover:shadow-violet-500/20">
         <div class="flex items-start justify-between">
             <div>
-                <p class="text-xs uppercase tracking-wide text-slate-400">Total de ventas</p>
-                <p class="mt-3 text-3xl font-semibold text-white">{{ stats.total_sales if stats else 128 }}</p>
+                <p class="text-xs uppercase tracking-wide text-slate-400">Ventas de este mes</p>
+                <p class="mt-3 text-3xl font-semibold text-white" id="stat-sales-month">—</p>
+                <p class="mt-1 text-xs text-slate-400"><span id="stat-sales-today">—</span> hoy</p>
             </div>
             <span class="rounded-xl bg-violet-500/15 p-2.5 text-violet-300 ring-1 ring-violet-500/40 transition-transform duration-300 group-hover:scale-110">
                 <svg class="h-5 w-5 animate-bounce" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -70,9 +67,9 @@
                 </svg>
             </span>
         </div>
-        <div class="mt-4 flex items-center gap-2 text-xs text-violet-300">
-            <span class="h-2 w-2 rounded-full bg-violet-400"></span>
-            <span>Flujo de transacciones estable</span>
+        <div class="mt-4 flex items-center gap-2 text-xs" id="stat-sales-trend-wrap">
+            <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+            <span class="text-slate-400" id="stat-sales-trend-label">Cargando…</span>
         </div>
     </article>
 
@@ -80,7 +77,7 @@
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-xs uppercase tracking-wide text-slate-400">Ingresos de hoy</p>
-                <p class="mt-3 text-3xl font-semibold text-white">{{ stats.todays_revenue if stats else '$ 4.380.500' }}</p>
+                <p class="mt-3 text-3xl font-semibold text-white" id="stat-revenue-today">—</p>
             </div>
             <span class="rounded-xl bg-emerald-500/15 p-2.5 text-emerald-300 ring-1 ring-emerald-500/40 transition-transform duration-300 group-hover:scale-110">
                 <svg class="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -88,17 +85,21 @@
                 </svg>
             </span>
         </div>
-        <div class="mt-4 flex items-center gap-2 text-xs text-emerald-300">
-            <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span>+12.4% vs. ayer</span>
+        <div class="mt-4 flex items-center gap-2 text-xs" id="stat-revenue-change-wrap">
+            <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+            <span class="text-slate-400" id="stat-revenue-change-label">Cargando…</span>
         </div>
     </article>
 
-    <article class="saas-card group rounded-2xl p-5 transition-all duration-300 hover:-translate-y-1 hover:border-rose-400/60 hover:shadow-rose-500/20">
+    <button
+        type="button"
+        id="open-low-stock-modal"
+        class="saas-card group rounded-2xl p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-rose-400/60 hover:shadow-rose-500/20"
+    >
         <div class="flex items-start justify-between">
             <div>
                 <p class="text-xs uppercase tracking-wide text-slate-400">Productos con bajo stock</p>
-                <p class="mt-3 text-3xl font-semibold text-white">{{ stats.low_stock_products if stats else 7 }}</p>
+                <p class="mt-3 text-3xl font-semibold text-white" id="stat-low-stock">—</p>
             </div>
             <span class="rounded-xl bg-rose-500/15 p-2.5 text-rose-300 ring-1 ring-rose-500/40 transition-transform duration-300 group-hover:scale-110">
                 <svg class="h-5 w-5 animate-pulse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -109,8 +110,65 @@
         </div>
         <div class="mt-4 flex items-center gap-2 text-xs text-rose-300">
             <span class="h-2 w-2 rounded-full bg-rose-400"></span>
-            <span>Requiere reposición</span>
+            <span>Requiere reposición · ver detalle</span>
         </div>
-    </article>
+    </button>
 </section>
+
+<div
+    id="low-stock-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="low-stock-modal-panel"
+        class="w-full max-w-xl scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="low-stock-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="low-stock-modal-title" class="text-lg font-semibold text-white">Productos con bajo stock</h3>
+                <p class="text-xs text-slate-400">Productos activos con 10 unidades o menos en inventario.</p>
+            </div>
+            <button
+                id="close-low-stock-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="px-5 py-5 sm:px-6">
+            <div id="low-stock-modal-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div class="saas-table-wrap max-h-96 overflow-y-auto">
+                <table class="min-w-full text-left text-sm">
+                    <thead class="sticky top-0">
+                        <tr class="border-b border-slate-800 bg-slate-900/95 text-xs uppercase tracking-wider text-slate-400">
+                            <th class="px-3 py-3 font-medium">Producto</th>
+                            <th class="px-3 py-3 font-medium">Categoría</th>
+                            <th class="px-3 py-3 font-medium text-right">Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody id="low-stock-modal-body" class="divide-y divide-slate-800 text-slate-200">
+                        <tr>
+                            <td colspan="3" class="px-3 py-8">
+                                <div class="saas-empty animate-pulseSoft">Cargando…</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/dashboard/page.js') }}"></script>
 {% endblock %}

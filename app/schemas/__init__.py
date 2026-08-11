@@ -1,4 +1,6 @@
+from app.schemas.app_settings import AppSettingsRead, AppSettingsUpdate
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
+from app.schemas.dashboard import DashboardSummary, LowStockProduct, MetricInsight
 from app.schemas.product import ProductCreate, ProductListResponse, ProductRead, ProductUpdate
 from app.schemas.purchase import PurchaseCreate, PurchaseRead, PurchaseUpdate
 from app.schemas.purchase_item import PurchaseItemCreate, PurchaseItemRead
@@ -8,9 +10,14 @@ from app.schemas.supplier import SupplierCreate, SupplierRead, SupplierUpdate
 from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 __all__ = [
+    "AppSettingsRead",
+    "AppSettingsUpdate",
     "CategoryCreate",
     "CategoryRead",
     "CategoryUpdate",
+    "DashboardSummary",
+    "LowStockProduct",
+    "MetricInsight",
     "ProductCreate",
     "ProductListResponse",
     "ProductRead",

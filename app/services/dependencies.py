@@ -2,7 +2,9 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
+from app.services.app_settings_service import AppSettingsService
 from app.services.category_service import CategoryService
+from app.services.dashboard_service import DashboardService
 from app.services.product_service import ProductService
 from app.services.purchase_service import PurchaseService
 from app.services.sale_service import SaleService
@@ -32,3 +34,13 @@ def get_supplier_service(db: Session = Depends(get_db)) -> SupplierService:
 def get_purchase_service(db: Session = Depends(get_db)) -> PurchaseService:
     """Dependency provider for purchase service."""
     return PurchaseService(db)
+
+
+def get_dashboard_service(db: Session = Depends(get_db)) -> DashboardService:
+    """Dependency provider for dashboard service."""
+    return DashboardService(db)
+
+
+def get_app_settings_service(db: Session = Depends(get_db)) -> AppSettingsService:
+    """Dependency provider for app settings service."""
+    return AppSettingsService(db)

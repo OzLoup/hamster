@@ -11,7 +11,34 @@
 {% endblock %}
 
 {% block content %}
-<section class="saas-card rounded-3xl p-6 shadow-soft sm:p-8">
+<section class="saas-card max-w-2xl rounded-3xl p-6 shadow-soft sm:p-8">
+    <h3 class="text-base font-semibold text-slate-100">Datos del negocio</h3>
+    <p class="mt-1 text-sm text-slate-400">Este nombre se muestra en el panel principal.</p>
+
+    <div id="settings-error" class="mt-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <form id="business-settings-form" class="mt-5 space-y-4" novalidate>
+        <div>
+            <label for="business-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre del negocio</label>
+            <input id="business-name" name="business_name" type="text" class="saas-input" placeholder="Mi Negocio" />
+        </div>
+
+        <div class="flex justify-end border-t border-slate-800 pt-4">
+            <button
+                id="submit-business-settings"
+                type="submit"
+                class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                <svg id="business-settings-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                </svg>
+                <span id="business-settings-submit-label">Guardar cambios</span>
+            </button>
+        </div>
+    </form>
+</section>
+
+<section class="saas-card mt-6 max-w-2xl rounded-3xl p-6 shadow-soft sm:p-8">
     <div class="saas-empty">
         <div class="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-brand-500/40 bg-brand-500/10 text-brand-200">
             <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -19,8 +46,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75h10.5v3a1.5 1.5 0 0 1-1.5 1.5h-7.5a1.5 1.5 0 0 1-1.5-1.5v-3z"/>
             </svg>
         </div>
-        <p class="mt-4 font-display text-lg text-slate-100">Módulo de configuración listo</p>
-        <p class="mx-auto mt-2 max-w-xl text-sm text-slate-400">Conecta preferencias de perfil, seguridad y organización aquí cuando lo necesites. Las rutas y contratos de la API actuales no cambian.</p>
+        <p class="mt-4 font-display text-lg text-slate-100">Más preferencias, próximamente</p>
+        <p class="mx-auto mt-2 max-w-xl text-sm text-slate-400">Perfil, seguridad y usuarios se conectarán aquí cuando existan. Las rutas y contratos de la API actuales no cambian.</p>
     </div>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/settings/page.js') }}"></script>
 {% endblock %}
