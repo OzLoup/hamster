@@ -125,11 +125,19 @@ def product_payload() -> dict:
 def sale_payload_factory():
     """Build valid sale payloads using the provided product id and quantities."""
 
-    def _factory(*, product_id: int, quantity: int = 2, unit_price: str = "79.99", reference: str = "SALE-001") -> dict:
+    def _factory(
+        *,
+        product_id: int,
+        quantity: int = 2,
+        unit_price: str = "79.99",
+        reference: str = "SALE-001",
+        payment_method: str = "cash",
+    ) -> dict:
         unit = Decimal(unit_price)
         subtotal = (unit * Decimal(quantity)).quantize(Decimal("0.01"))
         return {
             "reference": reference,
+            "payment_method": payment_method,
             "total_amount": f"{subtotal:.2f}",
             "sale_items": [
                 {

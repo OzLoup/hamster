@@ -1,13 +1,14 @@
 import { ApiError, fetchProductsForSale, submitSale } from "./api.js";
 import { createSalesState } from "./state.js";
-import { renderProductOptions, renderSaleLines, renderSummary, setSubmitting, showMessage, clearMessage } from "./ui.js";
+import { renderProductSearchOptions, renderSaleLines, renderSummary, setSubmitting, showMessage, clearMessage } from "./ui.js";
 import { formatFastApiValidation, validateSaleInput } from "./validation.js";
 
 const state = createSalesState();
 
-const customerInput = document.getElementById("sale-customer");
 const paymentSelect = document.getElementById("sale-payment");
-const productSelect = document.getElementById("sale-product-select");
+const productSearchInput = document.getElementById("sale-product-search");
+const productIdInput = document.getElementById("sale-product-id");
+const productOptionsList = document.getElementById("sale-product-options");
 const quantityInput = document.getElementById("sale-quantity");
 const addButton = document.getElementById("add-sale-item");
 const tableBody = document.getElementById("sale-items-body");
@@ -37,18 +38,121 @@ function refreshUI() {
     });
 }
 
+let filteredProducts = [];
+let activeOptionIndex = -1;
+
+function normalize(text) {
+    return text
+        .toString()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+}
+
+function getFilteredProducts() {
+    const query = normalize(productSearchInput?.value.trim() || "");
+    if (!query) {
+        return state.products;
+    }
+    return state.products.filter((product) => normalize(product.name).includes(query));
+}
+
+function renderOptionsList() {
+    filteredProducts = getFilteredProducts();
+    if (activeOptionIndex >= filteredProducts.length) {
+        activeOptionIndex = filteredProducts.length - 1;
+    }
+    const activeId = filteredProducts[activeOptionIndex]?.id ?? null;
+    renderProductSearchOptions(productOptionsList, filteredProducts, activeId);
+}
+
+function openProductOptions() {
+    renderOptionsList();
+    productOptionsList?.classList.remove("hidden");
+    productSearchInput?.setAttribute("aria-expanded", "true");
+}
+
+function closeProductOptions() {
+    productOptionsList?.classList.add("hidden");
+    productSearchInput?.setAttribute("aria-expanded", "false");
+    activeOptionIndex = -1;
+}
+
+function selectProduct(product) {
+    if (!product || !productSearchInput || !productIdInput) {
+        return;
+    }
+    productIdInput.value = String(product.id);
+    productSearchInput.value = product.name;
+    closeProductOptions();
+}
+
+function handleProductSearchInput() {
+    const selected = state.productsById.get(Number(productIdInput?.value));
+    if (!selected || selected.name !== productSearchInput?.value) {
+        productIdInput.value = "";
+    }
+    activeOptionIndex = -1;
+    openProductOptions();
+}
+
+function moveActiveOption(delta) {
+    if (!filteredProducts.length) {
+        return;
+    }
+    activeOptionIndex = (activeOptionIndex + delta + filteredProducts.length) % filteredProducts.length;
+    renderOptionsList();
+}
+
+function handleProductSearchKeydown(event) {
+    if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (productOptionsList?.classList.contains("hidden")) {
+            openProductOptions();
+            return;
+        }
+        moveActiveOption(1);
+    } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        moveActiveOption(-1);
+    } else if (event.key === "Enter") {
+        event.preventDefault();
+        const candidate = filteredProducts[activeOptionIndex] || filteredProducts[0];
+        selectProduct(candidate);
+    } else if (event.key === "Escape") {
+        closeProductOptions();
+    }
+}
+
+function handleProductOptionsClick(event) {
+    const button = event.target.closest("button[data-id]");
+    if (!button) {
+        return;
+    }
+    selectProduct(state.productsById.get(Number(button.dataset.id)));
+}
+
+function handleOutsideProductClick(event) {
+    if (!(event.target instanceof Node)) {
+        return;
+    }
+    if (productSearchInput?.contains(event.target) || productOptionsList?.contains(event.target)) {
+        return;
+    }
+    closeProductOptions();
+}
+
 function generateReference() {
-    const customer = (customerInput?.value || "customer").trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) || "CUST";
     const payment = (paymentSelect?.value || "na").toUpperCase().slice(0, 3);
     const stamp = Date.now();
-    return `SALE-${payment}-${customer}-${stamp}`;
+    return `SALE-${payment}-${stamp}`;
 }
 
 function addLine() {
     clearMessage(errorBox);
     clearMessage(successBox);
 
-    const productId = Number(productSelect?.value);
+    const productId = Number(productIdInput?.value);
     const quantity = Number(quantityInput?.value || 0);
 
     if (!productId) {
@@ -107,17 +211,16 @@ async function submitCurrentSale() {
     clearMessage(errorBox);
     clearMessage(successBox);
 
-    const customerName = (customerInput?.value || "").trim();
     const paymentMethod = paymentSelect?.value || "";
     const paymentMethodLabel = {
         cash: "efectivo",
         card: "tarjeta",
-        bank_transfer: "transferencia bancaria",
-        digital_wallet: "billetera digital",
+        nequi: "Nequi",
+        daviplata: "Daviplata",
+        bre_b: "Bre-B",
     }[paymentMethod] || paymentMethod.replace("_", " ");
 
     const validation = validateSaleInput({
-        customerName,
         paymentMethod,
         lines: state.lines,
     });
@@ -132,6 +235,7 @@ async function submitCurrentSale() {
 
     const payload = {
         reference: generateReference(),
+        payment_method: paymentMethod,
         total_amount: total.toFixed(2),
         sale_items: state.lines.map((line) => ({
             product_id: line.productId,
@@ -151,14 +255,17 @@ async function submitCurrentSale() {
 
         await submitSale(payload);
 
-        showMessage(successBox, `Venta registrada para ${customerName} vía ${paymentMethodLabel}.`);
+        showMessage(successBox, `Venta registrada vía ${paymentMethodLabel}.`);
         notify("success", "Venta registrada correctamente.");
         state.lines = [];
-        if (customerInput) {
-            customerInput.value = "";
-        }
         if (paymentSelect) {
             paymentSelect.value = "";
+        }
+        if (productSearchInput) {
+            productSearchInput.value = "";
+        }
+        if (productIdInput) {
+            productIdInput.value = "";
         }
         refreshUI();
 
@@ -203,7 +310,6 @@ async function loadProducts() {
         const products = await fetchProductsForSale();
         state.products = products;
         state.productsById = new Map(products.map((product) => [product.id, product]));
-        renderProductOptions(productSelect, products);
     } catch (error) {
         showMessage(errorBox, error.message || "No se pudieron cargar los productos para el registro de venta.");
         notify("error", error.message || "No se pudieron cargar los productos para el registro de venta.");
@@ -214,6 +320,11 @@ function wireEvents() {
     addButton?.addEventListener("click", addLine);
     submitButton?.addEventListener("click", submitCurrentSale);
     tableBody?.addEventListener("click", handleLineActions);
+    productSearchInput?.addEventListener("input", handleProductSearchInput);
+    productSearchInput?.addEventListener("focus", openProductOptions);
+    productSearchInput?.addEventListener("keydown", handleProductSearchKeydown);
+    productOptionsList?.addEventListener("click", handleProductOptionsClick);
+    document.addEventListener("click", handleOutsideProductClick);
 }
 
 wireEvents();

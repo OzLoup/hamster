@@ -79,6 +79,7 @@ def test_invalid_related_ids_return_not_found(client):
 
     sale_body = {
         "reference": "NEG-SALE-404",
+        "payment_method": "cash",
         "total_amount": "10.00",
         "sale_items": [
             {
@@ -171,6 +172,7 @@ def test_invalid_prices_return_422(client, db_session):
     }
     invalid_sale_total = {
         "reference": "NEG-PRICE-SALE",
+        "payment_method": "cash",
         "total_amount": "-1.00",
         "sale_items": [
             {
@@ -207,12 +209,14 @@ def test_unexpected_values_return_400_or_422(client, db_session):
 
     business_invalid_sale = {
         "reference": "NEG-UNEXPECTED-SALE",
+        "payment_method": "cash",
         "total_amount": "0.00",
         "sale_items": [],
     }
 
     invalid_sale_item_payload = {
         "reference": "NEG-UNEXPECTED-SALE-2",
+        "payment_method": "cash",
         "total_amount": "10.00",
         "sale_items": [
             {

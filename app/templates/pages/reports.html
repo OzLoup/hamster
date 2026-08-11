@@ -59,7 +59,9 @@
             <span class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Últimos 7 días</span>
         </div>
         <div id="reports-daily-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
-        <canvas id="reports-daily-chart" class="hidden h-64 w-full"></canvas>
+        <div class="relative hidden h-64 w-full" id="reports-daily-chart-wrap">
+            <canvas id="reports-daily-chart"></canvas>
+        </div>
     </article>
 
     <article class="saas-card rounded-3xl p-5 sm:p-6">
@@ -68,7 +70,9 @@
             <span class="rounded-lg bg-brand-500/15 px-2.5 py-1 text-xs text-brand-200">Últimos 6 meses</span>
         </div>
         <div id="reports-monthly-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
-        <canvas id="reports-monthly-chart" class="hidden h-64 w-full"></canvas>
+        <div class="relative hidden h-64 w-full" id="reports-monthly-chart-wrap">
+            <canvas id="reports-monthly-chart"></canvas>
+        </div>
     </article>
 </section>
 

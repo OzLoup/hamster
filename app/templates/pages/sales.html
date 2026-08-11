@@ -19,28 +19,39 @@
         <div id="sales-error" class="mt-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
         <div id="sales-success" class="mt-4 hidden rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200" role="status" aria-live="polite"></div>
 
-        <div class="mt-5 grid gap-4 sm:grid-cols-2">
-            <div>
-                <label for="sale-customer" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre del cliente</label>
-                <input id="sale-customer" type="text" placeholder="Juan Pérez" class="saas-input" />
-            </div>
-            <div>
-                <label for="sale-payment" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Método de pago</label>
-                <select id="sale-payment" class="saas-select">
-                    <option value="">Selecciona un método de pago</option>
-                    <option value="cash">Efectivo</option>
-                    <option value="card">Tarjeta</option>
-                    <option value="bank_transfer">Transferencia bancaria</option>
-                    <option value="digital_wallet">Billetera digital</option>
-                </select>
-            </div>
+        <div class="mt-5 max-w-xs">
+            <label for="sale-payment" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Método de pago</label>
+            <select id="sale-payment" class="saas-select">
+                <option value="">Selecciona un método de pago</option>
+                <option value="cash">Efectivo</option>
+                <option value="card">Tarjeta</option>
+                <option value="nequi">Nequi</option>
+                <option value="daviplata">Daviplata</option>
+                <option value="bre_b">Bre-B</option>
+            </select>
         </div>
 
         <div class="mt-5 rounded-2xl border border-slate-800 bg-slate-950/50 p-4">
             <div class="grid gap-3 sm:grid-cols-5">
-                <div class="sm:col-span-3">
-                    <label for="sale-product-select" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Producto</label>
-                    <select id="sale-product-select" class="saas-select"></select>
+                <div class="relative sm:col-span-3">
+                    <label for="sale-product-search" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Producto</label>
+                    <input
+                        id="sale-product-search"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Busca un producto por nombre"
+                        class="saas-input"
+                        role="combobox"
+                        aria-expanded="false"
+                        aria-controls="sale-product-options"
+                        aria-autocomplete="list"
+                    />
+                    <input type="hidden" id="sale-product-id" />
+                    <div
+                        id="sale-product-options"
+                        role="listbox"
+                        class="absolute z-20 mt-1 hidden max-h-56 w-full overflow-y-auto rounded-xl border border-slate-700 bg-slate-900 shadow-glow divide-y divide-slate-800"
+                    ></div>
                 </div>
                 <div class="sm:col-span-1">
                     <label for="sale-quantity" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Cantidad</label>
@@ -85,7 +96,7 @@
             </div>
             <div class="flex items-center justify-between text-sm">
                 <span class="text-slate-400">Total</span>
-                <span id="sale-total" class="text-lg font-semibold text-emerald-300">$0.00</span>
+                <span id="sale-total" class="text-lg font-semibold text-emerald-300">$ 0</span>
             </div>
         </div>
 

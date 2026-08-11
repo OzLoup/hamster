@@ -1,12 +1,13 @@
 function currency(value) {
     const amount = Number(value);
     if (Number.isNaN(amount)) {
-        return "$0.00";
+        return "$ 0";
     }
-    return new Intl.NumberFormat("es-419", {
+    return new Intl.NumberFormat("es-CO", {
         style: "currency",
-        currency: "USD",
-        minimumFractionDigits: 2,
+        currency: "COP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(amount);
 }
 

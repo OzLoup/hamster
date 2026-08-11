@@ -1,12 +1,13 @@
 function currency(value) {
     const amount = Number(value);
     if (Number.isNaN(amount)) {
-        return "$0.00";
+        return "$ 0";
     }
-    return new Intl.NumberFormat("es-419", {
+    return new Intl.NumberFormat("es-CO", {
         style: "currency",
-        currency: "USD",
-        maximumFractionDigits: 2,
+        currency: "COP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(amount);
 }
 
@@ -97,7 +98,7 @@ export function renderDailySalesChart(labels, values) {
         return;
     }
 
-    hideLoading("reports-daily-chart-loading", "reports-daily-chart");
+    hideLoading("reports-daily-chart-loading", "reports-daily-chart-wrap");
 
     new Chart(canvas, {
         type: "line",
@@ -149,7 +150,7 @@ export function renderMonthlyRevenueChart(labels, values) {
         return;
     }
 
-    hideLoading("reports-monthly-chart-loading", "reports-monthly-chart");
+    hideLoading("reports-monthly-chart-loading", "reports-monthly-chart-wrap");
 
     new Chart(canvas, {
         type: "bar",

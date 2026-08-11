@@ -1,9 +1,5 @@
-export function validateSaleInput({ customerName, paymentMethod, lines }) {
+export function validateSaleInput({ paymentMethod, lines }) {
     const errors = [];
-
-    if (!customerName || customerName.trim().length < 2) {
-        errors.push("El nombre del cliente debe contener al menos 2 caracteres.");
-    }
 
     if (!paymentMethod) {
         errors.push("Se requiere un método de pago.");

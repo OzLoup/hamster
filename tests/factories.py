@@ -79,10 +79,12 @@ def sale_request_body(
     product_id: int,
     quantity: int = 1,
     unit_price: str = "79.99",
+    payment_method: str = "cash",
 ) -> dict:
     subtotal = (Decimal(unit_price) * Decimal(quantity)).quantize(Decimal("0.01"))
     return {
         "reference": reference,
+        "payment_method": payment_method,
         "total_amount": f"{subtotal:.2f}",
         "sale_items": [
             {

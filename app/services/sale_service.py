@@ -45,7 +45,11 @@ class SaleService:
             if payload.total_amount != calculated_total:
                 raise ValidationError("Provided total_amount does not match the sale item totals.")
 
-            sale = Sale(reference=payload.reference, total_amount=payload.total_amount)
+            sale = Sale(
+                reference=payload.reference,
+                payment_method=payload.payment_method,
+                total_amount=payload.total_amount,
+            )
             self.db.add(sale)
             self.db.flush()
 

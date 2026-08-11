@@ -1,26 +1,44 @@
 function currency(value) {
     const amount = Number(value);
     if (Number.isNaN(amount)) {
-        return "$0.00";
+        return "$ 0";
     }
-    return new Intl.NumberFormat("es-419", {
+    return new Intl.NumberFormat("es-CO", {
         style: "currency",
-        currency: "USD",
+        currency: "COP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
     }).format(amount);
 }
 
-export function renderProductOptions(selectElement, products) {
-    if (!selectElement) {
+export function renderProductSearchOptions(container, products, activeId = null) {
+    if (!container) {
         return;
     }
 
-    selectElement.innerHTML = [
-        '<option value="">Selecciona un producto</option>',
-        ...products.map(
-            (product) =>
-                `<option value="${product.id}">${product.name} (Stock disponible: ${product.stock_quantity})</option>`
-        ),
-    ].join("");
+    if (!products.length) {
+        container.innerHTML = '<p class="px-3 py-3 text-sm text-slate-400">No se encontraron productos.</p>';
+        return;
+    }
+
+    container.innerHTML = products
+        .map((product) => {
+            const isActive = product.id === activeId;
+            const outOfStock = product.stock_quantity <= 0;
+            return `
+                <button
+                    type="button"
+                    role="option"
+                    data-id="${product.id}"
+                    aria-selected="${isActive}"
+                    class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors ${isActive ? "bg-slate-800 text-white" : "text-slate-200 hover:bg-slate-800/70"}"
+                >
+                    <span class="truncate">${product.name}</span>
+                    <span class="shrink-0 text-xs ${outOfStock ? "text-rose-300" : "text-slate-400"}">${outOfStock ? "Sin stock" : `Stock: ${product.stock_quantity}`}</span>
+                </button>
+            `;
+        })
+        .join("");
 }
 
 export function renderSaleLines(tableBody, lines) {

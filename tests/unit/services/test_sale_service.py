@@ -24,10 +24,12 @@ def _build_sale_create_payload(
     product_id: int,
     quantity: int,
     unit_price: Decimal,
+    payment_method: str = "cash",
 ) -> SaleCreate:
     subtotal = (unit_price * quantity).quantize(Decimal("0.01"))
     return SaleCreate(
         reference=reference,
+        payment_method=payment_method,
         total_amount=subtotal,
         sale_items=[
             SaleItemCreate(
@@ -99,6 +101,7 @@ def test_create_sale_with_invalid_total_raises_validation_error(service, db_sess
     product = create_product(db_session, category_id=category.id, sku="SALE-KB-201")
     payload = SaleCreate(
         reference="SALE-002",
+        payment_method="cash",
         total_amount=Decimal("999.99"),
         sale_items=[
             SaleItemCreate(
@@ -186,7 +189,9 @@ def test_create_sale_integrity_error_raises_conflict_and_rolls_back():
         unit_price=Decimal("79.99"),
         subtotal=Decimal("79.99"),
     )
-    payload = SaleCreate(reference="SALE-006", total_amount=Decimal("79.99"), sale_items=[line])
+    payload = SaleCreate(
+        reference="SALE-006", payment_method="cash", total_amount=Decimal("79.99"), sale_items=[line]
+    )
 
     product = Product(
         id=1,
@@ -203,7 +208,7 @@ def test_create_sale_integrity_error_raises_conflict_and_rolls_back():
     db.get.return_value = product
     db.commit.side_effect = IntegrityError("INSERT", {}, Exception("constraint"))
 
-    created_sale = Sale(id=123, reference="SALE-006", total_amount=Decimal("79.99"))
+    created_sale = Sale(id=123, reference="SALE-006", payment_method="cash", total_amount=Decimal("79.99"))
 
     def assign_sale_id(entity):
         if isinstance(entity, Sale):
@@ -227,7 +232,9 @@ def test_create_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
         unit_price=Decimal("79.99"),
         subtotal=Decimal("79.99"),
     )
-    payload = SaleCreate(reference="SALE-007", total_amount=Decimal("79.99"), sale_items=[line])
+    payload = SaleCreate(
+        reference="SALE-007", payment_method="cash", total_amount=Decimal("79.99"), sale_items=[line]
+    )
 
     product = Product(
         id=1,
@@ -260,7 +267,7 @@ def test_create_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
 
 def test_update_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
-    existing_sale = Sale(id=300, reference="SALE-300", total_amount=Decimal("79.99"))
+    existing_sale = Sale(id=300, reference="SALE-300", payment_method="cash", total_amount=Decimal("79.99"))
 
     db = MagicMock()
     db.scalar.side_effect = [existing_sale, None]

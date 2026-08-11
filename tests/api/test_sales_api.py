@@ -133,6 +133,7 @@ def test_create_sale_returns_422_for_invalid_payload(client):
     # Arrange
     invalid_body = {
         "reference": "SALE-060",
+        "payment_method": "cash",
         "total_amount": "10.00",
         "sale_items": [
             {

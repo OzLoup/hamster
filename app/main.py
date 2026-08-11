@@ -25,6 +25,15 @@ def create_app() -> FastAPI:
     application = FastAPI(title=settings.app_name, lifespan=lifespan)
     application.include_router(api_router, prefix="/api/v1")
     application.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+    if settings.app_env == "development":
+        @application.middleware("http")
+        async def disable_static_cache(request: Request, call_next):
+            response = await call_next(request)
+            if request.url.path.startswith("/static/"):
+                response.headers["Cache-Control"] = "no-store"
+            return response
+
     return application
 
 
@@ -42,7 +51,7 @@ def home(request: Request) -> HTMLResponse:
         "total_products": 25,
         "total_categories": 5,
         "total_sales": 128,
-        "todays_revenue": "$4,380.50",
+        "todays_revenue": "$ 4.380.500",
         "low_stock_products": 7,
     }
     return templates.TemplateResponse(
