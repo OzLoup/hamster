@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -56,14 +58,17 @@ class ProductService:
         return product
 
     def create_product(self, payload: ProductCreate) -> Product:
-        """Create a product after validating category and SKU uniqueness."""
+        """Create a product after validating its category; the SKU is generated automatically."""
         self._ensure_category_exists(payload.category_id)
-        self._ensure_unique_sku(payload.sku)
 
-        product = Product(**payload.model_dump())
+        # Temporary placeholder so the NOT NULL/unique sku column accepts the insert;
+        # it is replaced with the real, id-based SKU right after the row gets its id.
+        product = Product(**payload.model_dump(), sku=f"TMP-{uuid.uuid4().hex}")
         self.db.add(product)
 
         try:
+            self.db.flush()
+            product.sku = self._generate_sku(product.id)
             self.db.commit()
         except IntegrityError as exc:
             self.db.rollback()
@@ -82,8 +87,6 @@ class ProductService:
 
         if "category_id" in updates:
             self._ensure_category_exists(updates["category_id"])
-        if "sku" in updates and updates["sku"] != product.sku:
-            self._ensure_unique_sku(updates["sku"])
         if "stock_quantity" in updates and updates["stock_quantity"] < 0:
             raise ValidationError("Stock quantity cannot be negative.")
 
@@ -136,7 +139,5 @@ class ProductService:
         if exists is None:
             raise NotFoundError(f"Category {category_id} was not found.")
 
-    def _ensure_unique_sku(self, sku: str) -> None:
-        existing = self.db.scalar(select(Product.id).where(Product.sku == sku))
-        if existing is not None:
-            raise ConflictError(f"Product SKU '{sku}' already exists.")
+    def _generate_sku(self, product_id: int) -> str:
+        return f"PRD-{product_id:06d}"

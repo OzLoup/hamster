@@ -21,7 +21,6 @@ def test_missing_required_fields_product_post_returns_422(client):
     # Arrange
     invalid_body = {
         "name": "Keyboard",
-        "sku": "NEG-MISSING-001",
         "stock_quantity": 10,
     }
 
@@ -71,7 +70,6 @@ def test_invalid_related_ids_return_not_found(client):
     invalid_product_body = {
         "category_id": 9999,
         "name": "Invalid Category Product",
-        "sku": "NEG-INVALID-ID-001",
         "stock_quantity": 5,
         "cost": "10.00",
         "sale_price": "20.00",
@@ -106,7 +104,6 @@ def test_negative_stock_returns_422(client, db_session):
     invalid_body = {
         "category_id": category.id,
         "name": "Negative Stock Product",
-        "sku": "NEG-STOCK-001",
         "stock_quantity": -1,
         "cost": "10.00",
         "sale_price": "20.00",
@@ -135,7 +132,7 @@ def test_large_strings_return_422(client, db_session):
     # Arrange
     category = create_category(db_session)
     oversized_category_name = "x" * 121
-    oversized_product_sku = "S" * 65
+    oversized_product_name = "x" * 151
 
     category_body = {
         "name": oversized_category_name,
@@ -143,8 +140,7 @@ def test_large_strings_return_422(client, db_session):
     }
     product_body = {
         "category_id": category.id,
-        "name": "Valid Name",
-        "sku": oversized_product_sku,
+        "name": oversized_product_name,
         "stock_quantity": 10,
         "cost": "10.00",
         "sale_price": "20.00",
@@ -165,7 +161,6 @@ def test_invalid_prices_return_422(client, db_session):
     invalid_product_prices = {
         "category_id": category.id,
         "name": "Invalid Price Product",
-        "sku": "NEG-PRICE-001",
         "stock_quantity": 5,
         "cost": "-1.00",
         "sale_price": "-5.00",
@@ -201,7 +196,6 @@ def test_unexpected_values_return_400_or_422(client, db_session):
     unexpected_type_payload = {
         "category_id": category.id,
         "name": "Bad Type Product",
-        "sku": "NEG-UNEXPECTED-002",
         "stock_quantity": "not-a-number",
         "cost": "10.00",
         "sale_price": "20.00",

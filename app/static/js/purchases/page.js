@@ -1,7 +1,15 @@
-import { ApiError, fetchActiveSuppliers, fetchProductsForPurchase, submitPurchase } from "./api.js";
+import {
+    ApiError,
+    createProduct,
+    fetchActiveSuppliers,
+    fetchCategories,
+    fetchProductsForPurchase,
+    submitPurchase,
+} from "./api.js";
 import { createPurchasesState } from "./state.js";
 import {
     clearMessage,
+    renderCategoryOptions,
     renderPurchaseLines,
     renderProductSearchOptions,
     renderSummary,
@@ -9,7 +17,7 @@ import {
     setSubmitting,
     showMessage,
 } from "./ui.js";
-import { formatFastApiValidation, validatePurchaseInput } from "./validation.js";
+import { formatFastApiValidation, validateNewProductPayload, validatePurchaseInput } from "./validation.js";
 
 const state = createPurchasesState();
 
@@ -29,8 +37,176 @@ const totalElement = document.getElementById("purchase-total");
 const errorBox = document.getElementById("purchases-error");
 const successBox = document.getElementById("purchases-success");
 
+const newProductButton = document.getElementById("open-new-product-modal");
+const newProductOverlay = document.getElementById("new-product-modal-overlay");
+const newProductPanel = document.getElementById("new-product-modal-panel");
+const closeNewProductButton = document.getElementById("close-new-product-modal");
+const cancelNewProductButton = document.getElementById("cancel-new-product-modal");
+const newProductForm = document.getElementById("new-product-form");
+const newProductErrorBox = document.getElementById("new-product-modal-errors");
+const newProductSubmitButton = document.getElementById("submit-new-product");
+const newProductSubmitSpinner = document.getElementById("new-product-submit-spinner");
+const newProductNameInput = document.getElementById("new-product-name");
+const newProductCategorySelect = document.getElementById("new-product-category");
+const newProductCostInput = document.getElementById("new-product-cost");
+const newProductSalePriceInput = document.getElementById("new-product-sale-price");
+const newProductFieldInputs = Array.from(document.querySelectorAll(".new-product-field"));
+
+let categoriesLoaded = false;
+
 function notify(type, message, duration = 3200) {
     window.showToast?.({ type, message, duration });
+}
+
+function fieldErrorClass(input) {
+    input.classList.add("border-rose-500", "ring-rose-500/40");
+    input.classList.remove("border-slate-700", "focus:border-brand-400", "focus:ring-brand-500/40");
+}
+
+function clearFieldErrorClass(input) {
+    input.classList.remove("border-rose-500", "ring-rose-500/40");
+    input.classList.add("border-slate-700", "focus:border-brand-400", "focus:ring-brand-500/40");
+}
+
+function resetNewProductErrors() {
+    if (newProductErrorBox) {
+        newProductErrorBox.textContent = "";
+        newProductErrorBox.classList.add("hidden");
+    }
+    newProductFieldInputs.forEach(clearFieldErrorClass);
+}
+
+function setNewProductErrorMessages(messages) {
+    if (!newProductErrorBox) {
+        return;
+    }
+    newProductErrorBox.innerHTML = messages.map((message) => `<p>${message}</p>`).join("");
+    newProductErrorBox.classList.remove("hidden");
+}
+
+function markInvalidNewProductFields(messages) {
+    const lowerMessages = messages.map((item) => item.toLowerCase());
+    newProductFieldInputs.forEach((input) => {
+        const key = input.getAttribute("name")?.toLowerCase();
+        if (!key) {
+            return;
+        }
+        if (lowerMessages.some((message) => message.includes(key))) {
+            fieldErrorClass(input);
+        }
+    });
+}
+
+function hideNewProductModal() {
+    if (!newProductOverlay || !newProductPanel) {
+        return;
+    }
+    newProductOverlay.classList.add("opacity-0");
+    newProductPanel.classList.add("scale-95", "translate-y-4");
+    setTimeout(() => {
+        newProductOverlay.classList.add("hidden");
+        newProductOverlay.classList.remove("flex");
+    }, 180);
+}
+
+function showNewProductModal() {
+    if (!newProductOverlay || !newProductPanel) {
+        return;
+    }
+    newProductOverlay.classList.remove("hidden");
+    newProductOverlay.classList.add("flex");
+    requestAnimationFrame(() => {
+        newProductOverlay.classList.remove("opacity-0");
+        newProductPanel.classList.remove("scale-95", "translate-y-4");
+    });
+}
+
+async function ensureCategoriesLoaded() {
+    if (categoriesLoaded) {
+        return;
+    }
+    try {
+        const categories = await fetchCategories();
+        renderCategoryOptions(newProductCategorySelect, categories);
+        categoriesLoaded = true;
+    } catch (error) {
+        notify("error", error.message || "No se pudieron cargar las categorías.");
+    }
+}
+
+async function openNewProductModal() {
+    resetNewProductErrors();
+    if (newProductForm) {
+        newProductForm.reset();
+    }
+    if (newProductNameInput) {
+        newProductNameInput.value = (productSearchInput?.value || "").trim();
+    }
+    if (newProductCostInput) {
+        newProductCostInput.value = unitCostInput?.value || "";
+    }
+    await ensureCategoriesLoaded();
+    showNewProductModal();
+    newProductNameInput?.focus();
+}
+
+async function handleSubmitNewProduct(event) {
+    event.preventDefault();
+    resetNewProductErrors();
+
+    const rawPayload = {
+        name: newProductNameInput?.value || "",
+        category_id: newProductCategorySelect?.value || "",
+        cost: newProductCostInput?.value || "",
+        sale_price: newProductSalePriceInput?.value || "",
+    };
+    const validation = validateNewProductPayload(rawPayload);
+    if (!validation.isValid) {
+        setNewProductErrorMessages(validation.errors);
+        markInvalidNewProductFields(validation.errors);
+        notify("warning", "Por favor revisa los campos del producto nuevo.");
+        return;
+    }
+
+    try {
+        if (newProductSubmitButton) {
+            newProductSubmitButton.disabled = true;
+        }
+        newProductSubmitSpinner?.classList.remove("hidden");
+
+        const created = await createProduct(validation.payload);
+
+        state.products.push(created);
+        state.productsById.set(created.id, created);
+        selectProduct(created);
+        if (unitCostInput && !unitCostInput.value) {
+            unitCostInput.value = created.cost;
+        }
+
+        hideNewProductModal();
+        notify("success", "Producto creado y seleccionado para esta compra.");
+        quantityInput?.focus();
+    } catch (error) {
+        if (error instanceof ApiError) {
+            const apiMessages = formatFastApiValidation(error.details);
+            if (apiMessages.length) {
+                setNewProductErrorMessages(apiMessages);
+                markInvalidNewProductFields(apiMessages);
+                notify("error", "Validación fallida. Revisa los detalles del producto.");
+            } else {
+                setNewProductErrorMessages([error.message]);
+                notify("error", error.message);
+            }
+            return;
+        }
+        setNewProductErrorMessages([error.message || "Error inesperado al crear el producto."]);
+        notify("error", error.message || "Error inesperado al crear el producto.");
+    } finally {
+        if (newProductSubmitButton) {
+            newProductSubmitButton.disabled = false;
+        }
+        newProductSubmitSpinner?.classList.add("hidden");
+    }
 }
 
 function getRunningTotal() {
@@ -340,6 +516,21 @@ function wireEvents() {
     productSearchInput?.addEventListener("keydown", handleProductSearchKeydown);
     productOptionsList?.addEventListener("click", handleProductOptionsClick);
     document.addEventListener("click", handleOutsideProductClick);
+
+    newProductButton?.addEventListener("click", openNewProductModal);
+    closeNewProductButton?.addEventListener("click", hideNewProductModal);
+    cancelNewProductButton?.addEventListener("click", hideNewProductModal);
+    newProductOverlay?.addEventListener("click", (event) => {
+        if (event.target === newProductOverlay) {
+            hideNewProductModal();
+        }
+    });
+    newProductForm?.addEventListener("submit", handleSubmitNewProduct);
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && newProductOverlay && !newProductOverlay.classList.contains("hidden")) {
+            hideNewProductModal();
+        }
+    });
 }
 
 wireEvents();

@@ -17,11 +17,10 @@ def service(db_session):
     return ProductService(db_session)
 
 
-def _build_product_create_payload(category_id, sku="KB-100"):
+def _build_product_create_payload(category_id):
     return ProductCreate(
         category_id=category_id,
         name="Mechanical Keyboard",
-        sku=sku,
         stock_quantity=30,
         cost=Decimal("40.00"),
         sale_price=Decimal("79.99"),
@@ -39,18 +38,19 @@ def test_create_product_success(service, db_session):
     # Assert
     assert created.id is not None
     assert created.category_id == category.id
-    assert created.sku == "KB-100"
+    assert created.sku == f"PRD-{created.id:06d}"
 
 
-def test_create_product_duplicate_sku_raises_conflict(service, db_session):
+def test_create_product_generates_unique_sku_per_product(service, db_session):
     # Arrange
     category = create_category(db_session, name="Electronics", description="Category for product tests")
-    service.create_product(_build_product_create_payload(category.id, sku="KB-100"))
-    duplicate_payload = _build_product_create_payload(category.id, sku="KB-100")
 
-    # Act / Assert
-    with pytest.raises(ConflictError, match="already exists"):
-        service.create_product(duplicate_payload)
+    # Act
+    first = service.create_product(_build_product_create_payload(category.id))
+    second = service.create_product(_build_product_create_payload(category.id))
+
+    # Assert
+    assert first.sku != second.sku
 
 
 def test_create_product_with_missing_category_raises_not_found(service):
@@ -65,7 +65,7 @@ def test_create_product_with_missing_category_raises_not_found(service):
 def test_update_product_success(service, db_session):
     # Arrange
     category = create_category(db_session, name="Electronics", description="Category for product tests")
-    product = service.create_product(_build_product_create_payload(category.id, sku="KB-100"))
+    product = service.create_product(_build_product_create_payload(category.id))
     update_payload = ProductUpdate(name="Gaming Keyboard", stock_quantity=45)
 
     # Act
@@ -75,18 +75,6 @@ def test_update_product_success(service, db_session):
     assert updated.id == product.id
     assert updated.name == "Gaming Keyboard"
     assert updated.stock_quantity == 45
-
-
-def test_update_product_duplicate_sku_raises_conflict(service, db_session):
-    # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
-    first = service.create_product(_build_product_create_payload(category.id, sku="KB-100"))
-    service.create_product(_build_product_create_payload(category.id, sku="KB-200"))
-    duplicate_sku_payload = ProductUpdate(sku="KB-200")
-
-    # Act / Assert
-    with pytest.raises(ConflictError, match="already exists"):
-        service.update_product(first.id, duplicate_sku_payload)
 
 
 def test_update_product_schema_rejects_negative_stock_value():
@@ -137,11 +125,16 @@ def test_create_product_integrity_error_raises_conflict_and_rolls_back():
     db.scalar.side_effect = scalar_side_effect
     db.commit.side_effect = IntegrityError("INSERT", {}, Exception("constraint"))
 
+    def assign_product_id(entity):
+        if isinstance(entity, Product):
+            entity.id = 501
+
+    db.add.side_effect = assign_product_id
+
     service = ProductService(db)
     payload = ProductCreate(
         category_id=1,
         name="Mechanical Keyboard",
-        sku="KB-100",
         stock_quantity=10,
         cost=Decimal("40.00"),
         sale_price=Decimal("79.99"),
@@ -168,11 +161,16 @@ def test_create_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.scalar.side_effect = scalar_side_effect
     db.commit.side_effect = SQLAlchemyError("db down")
 
+    def assign_product_id(entity):
+        if isinstance(entity, Product):
+            entity.id = 502
+
+    db.add.side_effect = assign_product_id
+
     service = ProductService(db)
     payload = ProductCreate(
         category_id=1,
         name="Mechanical Keyboard",
-        sku="KB-100",
         stock_quantity=10,
         cost=Decimal("40.00"),
         sale_price=Decimal("79.99"),

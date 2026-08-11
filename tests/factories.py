@@ -74,7 +74,6 @@ def product_request_body(
     *,
     category_id: int,
     name: str = "Mechanical Keyboard",
-    sku: str = "PRD-100",
     stock_quantity: int = 20,
     cost: str = "40.00",
     sale_price: str = "79.99",
@@ -82,7 +81,6 @@ def product_request_body(
     return {
         "category_id": category_id,
         "name": name,
-        "sku": sku,
         "stock_quantity": stock_quantity,
         "cost": cost,
         "sale_price": sale_price,

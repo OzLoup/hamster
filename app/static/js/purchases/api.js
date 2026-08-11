@@ -1,6 +1,7 @@
 const PRODUCTS_API_BASE = "/api/v1/products";
 const SUPPLIERS_API_BASE = "/api/v1/suppliers";
 const PURCHASES_API_BASE = "/api/v1/purchases";
+const CATEGORIES_API_BASE = "/api/v1/categories";
 
 export class ApiError extends Error {
     constructor(message, status, details = null) {
@@ -72,6 +73,31 @@ export async function fetchActiveSuppliers() {
         headers: {
             Accept: "application/json",
         },
+    });
+
+    await assertOk(response);
+    return response.json();
+}
+
+export async function fetchCategories() {
+    const response = await fetch(CATEGORIES_API_BASE, {
+        headers: {
+            Accept: "application/json",
+        },
+    });
+
+    await assertOk(response);
+    return response.json();
+}
+
+export async function createProduct(payload) {
+    const response = await fetch(PRODUCTS_API_BASE, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
     });
 
     await assertOk(response);

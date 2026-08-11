@@ -22,6 +22,17 @@ export function renderSupplierOptions(selectElement, suppliers) {
     ].join("");
 }
 
+export function renderCategoryOptions(selectElement, categories) {
+    if (!selectElement) {
+        return;
+    }
+
+    selectElement.innerHTML = [
+        '<option value="">Selecciona categoría</option>',
+        ...categories.map((category) => `<option value="${category.id}">${category.name}</option>`),
+    ].join("");
+}
+
 export function renderProductSearchOptions(container, products, activeId = null) {
     if (!container) {
         return;

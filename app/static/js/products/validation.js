@@ -7,7 +7,6 @@ export function validateProductPayload(rawPayload) {
     const errors = [];
 
     const name = String(rawPayload.name || "").trim();
-    const sku = String(rawPayload.sku || "").trim();
     const categoryId = Number(rawPayload.category_id);
     const stockQuantity = toNumber(rawPayload.stock_quantity);
     const cost = toNumber(rawPayload.cost);
@@ -15,10 +14,6 @@ export function validateProductPayload(rawPayload) {
 
     if (!name || name.length < 1 || name.length > 150) {
         errors.push("El nombre del producto debe tener entre 1 y 150 caracteres.");
-    }
-
-    if (!sku || sku.length < 1 || sku.length > 64) {
-        errors.push("El SKU debe tener entre 1 y 64 caracteres.");
     }
 
     if (!Number.isInteger(categoryId) || categoryId <= 0) {
@@ -39,7 +34,6 @@ export function validateProductPayload(rawPayload) {
 
     const payload = {
         name,
-        sku,
         category_id: categoryId,
         stock_quantity: stockQuantity,
         cost: cost.toFixed(2),

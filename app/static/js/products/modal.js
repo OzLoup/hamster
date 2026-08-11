@@ -125,7 +125,6 @@ export function createProductModal() {
 
         productIdInput.value = product?.id ? String(product.id) : "";
         form.elements.namedItem("name").value = product?.name || "";
-        form.elements.namedItem("sku").value = product?.sku || "";
         form.elements.namedItem("category_id").value = product?.category_id ? String(product.category_id) : "";
         form.elements.namedItem("stock_quantity").value = product?.stock_quantity ?? 0;
         form.elements.namedItem("cost").value = product?.cost ?? "0.00";
@@ -173,7 +172,6 @@ export function createProductModal() {
         return {
             id: productIdInput.value,
             name: form.elements.namedItem("name").value,
-            sku: form.elements.namedItem("sku").value,
             category_id: form.elements.namedItem("category_id").value,
             stock_quantity: form.elements.namedItem("stock_quantity").value,
             cost: form.elements.namedItem("cost").value,

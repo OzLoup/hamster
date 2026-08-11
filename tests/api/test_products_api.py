@@ -102,7 +102,7 @@ def test_get_product_by_id_returns_404_when_missing(client):
 def test_create_product_returns_201_and_expected_body(client, db_session):
     # Arrange
     category = create_category(db_session)
-    request_body = product_request_body(category_id=category.id, sku="PRD-300")
+    request_body = product_request_body(category_id=category.id)
 
     # Act
     response = client.post(BASE_URL, json=request_body)
@@ -112,27 +112,26 @@ def test_create_product_returns_201_and_expected_body(client, db_session):
     payload = response.json()
     assert payload["id"] > 0
     assert payload["category_id"] == category.id
-    assert payload["sku"] == "PRD-300"
+    assert payload["sku"] == f"PRD-{payload['id']:06d}"
     assert payload["name"] == "Mechanical Keyboard"
 
 
-def test_create_product_returns_409_for_duplicate_sku(client, db_session):
+def test_create_product_generates_distinct_skus(client, db_session):
     # Arrange
     category = create_category(db_session)
-    create_product(db_session, category_id=category.id, sku="PRD-DUP")
-    duplicate_body = product_request_body(category_id=category.id, sku="PRD-DUP")
+    request_body = product_request_body(category_id=category.id)
 
     # Act
-    response = client.post(BASE_URL, json=duplicate_body)
+    first = client.post(BASE_URL, json=request_body).json()
+    second = client.post(BASE_URL, json=request_body).json()
 
     # Assert
-    assert response.status_code == 409
-    assert "already exists" in response.json()["detail"]
+    assert first["sku"] != second["sku"]
 
 
 def test_create_product_returns_404_for_missing_category(client):
     # Arrange
-    request_body = product_request_body(category_id=9999, sku="PRD-404")
+    request_body = product_request_body(category_id=9999)
 
     # Act
     response = client.post(BASE_URL, json=request_body)
@@ -148,7 +147,6 @@ def test_create_product_returns_422_for_invalid_body(client, db_session):
     invalid_body = product_request_body(
         category_id=category.id,
         name="",
-        sku="PRD-422",
         stock_quantity=-1,
         cost="-1.00",
     )
@@ -166,7 +164,7 @@ def test_update_product_returns_200_and_updated_body(client, db_session):
     # Arrange
     category = create_category(db_session)
     product = create_product(db_session, category_id=category.id, sku="PRD-500")
-    update_body = product_request_body(category_id=category.id, sku="PRD-500", name="Gaming Keyboard")
+    update_body = product_request_body(category_id=category.id, name="Gaming Keyboard")
 
     # Act
     response = client.put(f"{BASE_URL}/{product.id}", json=update_body)
@@ -182,7 +180,7 @@ def test_update_product_returns_200_and_updated_body(client, db_session):
 def test_update_product_returns_404_when_missing(client, db_session):
     # Arrange
     category = create_category(db_session)
-    update_body = product_request_body(category_id=category.id, sku="PRD-501")
+    update_body = product_request_body(category_id=category.id)
 
     # Act
     response = client.put(f"{BASE_URL}/9999", json=update_body)
@@ -192,25 +190,6 @@ def test_update_product_returns_404_when_missing(client, db_session):
     assert response.json()["detail"] == "Product 9999 was not found."
 
 
-def test_update_product_returns_409_for_duplicate_sku(client, db_session):
-    # Arrange
-    category = create_category(db_session)
-    first = create_product(db_session, category_id=category.id, sku="PRD-700")
-    create_product(db_session, category_id=category.id, sku="PRD-701")
-    update_body = product_request_body(
-        category_id=category.id,
-        sku="PRD-701",
-        name="Duplicate SKU Product",
-    )
-
-    # Act
-    response = client.put(f"{BASE_URL}/{first.id}", json=update_body)
-
-    # Assert
-    assert response.status_code == 409
-    assert "already exists" in response.json()["detail"]
-
-
 def test_update_product_returns_422_for_invalid_payload(client, db_session):
     # Arrange
     category = create_category(db_session)
@@ -218,7 +197,6 @@ def test_update_product_returns_422_for_invalid_payload(client, db_session):
     invalid_body = product_request_body(
         category_id=category.id,
         name="",
-        sku="PRD-800",
         sale_price="20.00",
     )
 
@@ -260,7 +238,7 @@ def test_delete_product_returns_404_when_missing(client):
 def test_create_product_defaults_to_active(client, db_session):
     # Arrange
     category = create_category(db_session)
-    request_body = product_request_body(category_id=category.id, sku="PRD-950")
+    request_body = product_request_body(category_id=category.id)
 
     # Act
     response = client.post(BASE_URL, json=request_body)
