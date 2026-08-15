@@ -1,0 +1,44 @@
+{% extends "base_auth.html" %}
+
+{% block title %}Iniciar sesión | {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-sm">
+    <div class="mb-6 flex flex-col items-center text-center">
+        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-brand-600 font-display text-lg font-bold text-white shadow-lg shadow-teal-500/25">H</span>
+        <h1 class="mt-4 font-display text-2xl font-semibold text-white">{{ app_name }}</h1>
+        <p class="mt-1 text-sm text-slate-400">Inicia sesión para continuar.</p>
+    </div>
+
+    <div class="saas-card rounded-3xl p-6 sm:p-7">
+        <form id="login-form" class="space-y-4" novalidate>
+            <div id="login-error" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="login-email" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Correo electrónico</label>
+                <input id="login-email" name="email" type="email" autocomplete="username" class="saas-input" placeholder="tu@negocio.com" />
+            </div>
+
+            <div>
+                <label for="login-password" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Contraseña</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" class="saas-input" placeholder="••••••••" />
+            </div>
+
+            <button
+                id="login-submit"
+                type="submit"
+                class="saas-btn saas-btn-primary w-full px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+                <svg id="login-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                </svg>
+                <span id="login-submit-label">Iniciar sesión</span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/auth/page.js') }}"></script>
+{% endblock %}

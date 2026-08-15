@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_db
 from app.services.app_settings_service import AppSettingsService
+from app.services.auth_service import AuthService
 from app.services.category_service import CategoryService
 from app.services.dashboard_service import DashboardService
 from app.services.open_tab_service import OpenTabService
@@ -50,3 +51,8 @@ def get_app_settings_service(db: Session = Depends(get_db)) -> AppSettingsServic
 def get_open_tab_service(db: Session = Depends(get_db)) -> OpenTabService:
     """Dependency provider for open tab service."""
     return OpenTabService(db)
+
+
+def get_auth_service(db: Session = Depends(get_db)) -> AuthService:
+    """Dependency provider for auth service."""
+    return AuthService(db)

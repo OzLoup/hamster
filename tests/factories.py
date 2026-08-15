@@ -2,9 +2,51 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.core.security import hash_password
+from app.models.business import Business
 from app.models.category import Category
 from app.models.product import Product
 from app.models.supplier import Supplier
+from app.models.user import User
+
+
+def create_business(
+    db_session: Session,
+    *,
+    name: str = "Test Business",
+    is_active: bool = True,
+) -> Business:
+    business = Business(name=name, is_active=is_active)
+    db_session.add(business)
+    db_session.commit()
+    db_session.refresh(business)
+    return business
+
+
+def create_user(
+    db_session: Session,
+    *,
+    email: str = "user@example.com",
+    password: str = "Password123",
+    full_name: str = "Test User",
+    role: str | None = "admin",
+    business_id: int | None = None,
+    is_superuser: bool = False,
+    is_active: bool = True,
+) -> User:
+    user = User(
+        email=email,
+        hashed_password=hash_password(password),
+        full_name=full_name,
+        role=role,
+        business_id=business_id,
+        is_superuser=is_superuser,
+        is_active=is_active,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
 
 
 def create_category(

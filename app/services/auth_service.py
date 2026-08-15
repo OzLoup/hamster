@@ -1,13 +1,21 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.schemas.auth import UserLogin
+from app.core.security import verify_password
+from app.models.user import User
+from app.services.exceptions import AuthenticationError
 
 
 class AuthService:
-    """Authentication service placeholder for future implementation."""
+    """Verifies login credentials. Session/cookie handling lives in the router."""
 
     def __init__(self, db: Session):
         self.db = db
 
-    def login(self, payload: UserLogin) -> dict:
-        raise NotImplementedError("Authentication service is not implemented yet.")
+    def authenticate(self, email: str, password: str) -> User:
+        user = self.db.scalar(select(User).where(User.email == email))
+        if user is None or not verify_password(password, user.hashed_password):
+            raise AuthenticationError("Invalid email or password.")
+        if not user.is_active:
+            raise AuthenticationError("This account has been deactivated.")
+        return user

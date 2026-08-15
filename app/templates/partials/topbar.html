@@ -30,6 +30,18 @@
                 <span class="h-2 w-2 rounded-full bg-emerald-300 animate-pulse"></span>
                 En vivo
             </div>
+            <button
+                id="logout-button"
+                type="button"
+                class="saas-btn saas-btn-muted rounded-xl px-3 py-2 text-xs"
+                aria-label="Cerrar sesión"
+            >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l3 3-3 3m3-3H3"/>
+                </svg>
+                Salir
+            </button>
         </div>
     </div>
 </header>
+<script type="module" src="{{ url_for('static', path='/js/auth/logout.js') }}"></script>

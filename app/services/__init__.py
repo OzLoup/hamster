@@ -6,6 +6,7 @@ from app.services.category_service import CategoryService
 from app.services.dashboard_service import DashboardService
 from app.services.dependencies import (
 	get_app_settings_service,
+	get_auth_service,
 	get_category_service,
 	get_dashboard_service,
 	get_open_tab_service,
@@ -14,7 +15,14 @@ from app.services.dependencies import (
 	get_sale_service,
 	get_supplier_service,
 )
-from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
+from app.services.exceptions import (
+	AuthenticationError,
+	AuthorizationError,
+	ConflictError,
+	NotFoundError,
+	ServiceError,
+	ValidationError,
+)
 from app.services.open_tab_service import OpenTabService
 from app.services.product_service import ProductService
 from app.services.purchase_service import PurchaseService
@@ -37,7 +45,10 @@ __all__ = [
 	"NotFoundError",
 	"ConflictError",
 	"ValidationError",
+	"AuthenticationError",
+	"AuthorizationError",
 	"get_app_settings_service",
+	"get_auth_service",
 	"get_category_service",
 	"get_dashboard_service",
 	"get_open_tab_service",

@@ -1,24 +1,32 @@
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field
 
-from app.schemas.common import ORMModel
+from app.schemas.common import TimestampedResponse
+
+UserRole = Literal["admin", "coordinator", "seller"]
 
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     email: EmailStr
-    role: str = Field(min_length=1, max_length=64, default="user")
-
-
-class UserCreate(UserBase):
     password: str = Field(min_length=8, max_length=255)
+    full_name: str = Field(min_length=1, max_length=150)
+    role: UserRole
 
 
 class UserUpdate(BaseModel):
     email: EmailStr | None = None
     password: str | None = Field(default=None, min_length=8, max_length=255)
-    role: str | None = Field(default=None, min_length=1, max_length=64)
+    full_name: str | None = Field(default=None, min_length=1, max_length=150)
+    role: UserRole | None = None
+    is_active: bool | None = None
 
 
-class UserRead(ORMModel):
+class UserRead(TimestampedResponse):
     id: int
+    business_id: int | None
     email: EmailStr
-    role: str
+    full_name: str
+    role: UserRole | None
+    is_superuser: bool
+    is_active: bool

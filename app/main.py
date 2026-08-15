@@ -52,6 +52,13 @@ def render_page(request: Request, template_name: str, db: Session) -> HTMLRespon
     )
 
 
+@app.get("/login", response_class=HTMLResponse)
+def login_page(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "pages/login.html", {"request": request, "app_name": settings.app_name}
+    )
+
+
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request, db: Session = Depends(get_db)) -> HTMLResponse:
     return render_page(request, "index.html", db)
