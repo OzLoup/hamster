@@ -12,17 +12,14 @@ function currency(value) {
 }
 
 function hideLoading(loadingId, targetId) {
-    const loading = document.getElementById(loadingId);
-    const target = document.getElementById(targetId);
-    loading?.classList.add("hidden");
-    target?.classList.remove("hidden");
+    document.getElementById(loadingId)?.classList.add("hidden");
+    document.getElementById(targetId)?.classList.remove("hidden");
 }
 
-function showEmpty(loadingId, emptyId) {
-    const loading = document.getElementById(loadingId);
-    const empty = document.getElementById(emptyId);
-    loading?.classList.add("hidden");
-    empty?.classList.remove("hidden");
+function setSectionState(loadingId, contentId, emptyId, state) {
+    document.getElementById(loadingId)?.classList.toggle("hidden", state !== "loading");
+    document.getElementById(contentId)?.classList.toggle("hidden", state !== "content");
+    document.getElementById(emptyId)?.classList.toggle("hidden", state !== "empty");
 }
 
 export function renderTopProducts(items) {
@@ -32,7 +29,8 @@ export function renderTopProducts(items) {
     }
 
     if (!items.length) {
-        showEmpty("reports-top-products-loading", "reports-top-products-empty");
+        list.innerHTML = "";
+        setSectionState("reports-top-products-loading", "reports-top-products-list", "reports-top-products-empty", "empty");
         return;
     }
 
@@ -53,7 +51,7 @@ export function renderTopProducts(items) {
         )
         .join("");
 
-    hideLoading("reports-top-products-loading", "reports-top-products-list");
+    setSectionState("reports-top-products-loading", "reports-top-products-list", "reports-top-products-empty", "content");
 }
 
 export function renderLowStock(items) {
@@ -63,7 +61,8 @@ export function renderLowStock(items) {
     }
 
     if (!items.length) {
-        showEmpty("reports-low-stock-loading", "reports-low-stock-empty");
+        list.innerHTML = "";
+        setSectionState("reports-low-stock-loading", "reports-low-stock-list", "reports-low-stock-empty", "empty");
         return;
     }
 
@@ -78,7 +77,59 @@ export function renderLowStock(items) {
         )
         .join("");
 
-    hideLoading("reports-low-stock-loading", "reports-low-stock-list");
+    setSectionState("reports-low-stock-loading", "reports-low-stock-list", "reports-low-stock-empty", "content");
+}
+
+export function renderTopSuppliers(items) {
+    const list = document.getElementById("reports-top-suppliers-list");
+    if (!list) {
+        return;
+    }
+
+    if (!items.length) {
+        list.innerHTML = "";
+        setSectionState("reports-top-suppliers-loading", "reports-top-suppliers-list", "reports-top-suppliers-empty", "empty");
+        return;
+    }
+
+    list.innerHTML = items
+        .map(
+            (item, index) => `
+                <div class="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/65 px-3 py-2.5">
+                    <div class="flex items-center gap-3">
+                        <span class="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-xs font-semibold text-amber-200">${index + 1}</span>
+                        <div>
+                            <p class="text-sm font-medium text-slate-100">${item.name}</p>
+                            <p class="text-xs text-slate-400">Compras: ${item.count}</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-rose-300">${currency(item.amount)}</span>
+                </div>
+            `
+        )
+        .join("");
+
+    setSectionState("reports-top-suppliers-loading", "reports-top-suppliers-list", "reports-top-suppliers-empty", "content");
+}
+
+export function renderStats({ totalSales, totalPurchases }) {
+    const salesEl = document.getElementById("reports-stat-sales");
+    const purchasesEl = document.getElementById("reports-stat-purchases");
+    const balanceEl = document.getElementById("reports-stat-balance");
+    const balance = Number(totalSales || 0) - Number(totalPurchases || 0);
+
+    if (salesEl) {
+        salesEl.textContent = currency(totalSales);
+    }
+    if (purchasesEl) {
+        purchasesEl.textContent = currency(totalPurchases);
+    }
+    if (balanceEl) {
+        balanceEl.textContent = currency(balance);
+        balanceEl.classList.toggle("text-emerald-300", balance >= 0);
+        balanceEl.classList.toggle("text-rose-300", balance < 0);
+        balanceEl.classList.toggle("text-slate-100", false);
+    }
 }
 
 function chartDatasetStyle(baseColor) {
@@ -92,6 +143,10 @@ function chartDatasetStyle(baseColor) {
     };
 }
 
+let dailyChartInstance = null;
+let monthlyChartInstance = null;
+let purchasesChartInstance = null;
+
 export function renderDailySalesChart(labels, values) {
     const canvas = document.getElementById("reports-daily-chart");
     if (!canvas || typeof Chart === "undefined") {
@@ -100,7 +155,8 @@ export function renderDailySalesChart(labels, values) {
 
     hideLoading("reports-daily-chart-loading", "reports-daily-chart-wrap");
 
-    new Chart(canvas, {
+    dailyChartInstance?.destroy();
+    dailyChartInstance = new Chart(canvas, {
         type: "line",
         data: {
             labels,
@@ -152,7 +208,8 @@ export function renderMonthlyRevenueChart(labels, values) {
 
     hideLoading("reports-monthly-chart-loading", "reports-monthly-chart-wrap");
 
-    new Chart(canvas, {
+    monthlyChartInstance?.destroy();
+    monthlyChartInstance = new Chart(canvas, {
         type: "bar",
         data: {
             labels,
@@ -163,6 +220,62 @@ export function renderMonthlyRevenueChart(labels, values) {
                     borderRadius: 8,
                     backgroundColor: "#3b82f6aa",
                     borderColor: "#60a5fa",
+                    borderWidth: 1,
+                },
+            ],
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#cbd5e1",
+                    },
+                },
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: "#94a3b8",
+                    },
+                    grid: {
+                        color: "#1e293b",
+                    },
+                },
+                y: {
+                    ticks: {
+                        color: "#94a3b8",
+                    },
+                    grid: {
+                        color: "#1e293b",
+                    },
+                },
+            },
+        },
+    });
+}
+
+export function renderMonthlyPurchasesChart(labels, values) {
+    const canvas = document.getElementById("reports-purchases-chart");
+    if (!canvas || typeof Chart === "undefined") {
+        return;
+    }
+
+    hideLoading("reports-purchases-chart-loading", "reports-purchases-chart-wrap");
+
+    purchasesChartInstance?.destroy();
+    purchasesChartInstance = new Chart(canvas, {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: "Compras mensuales",
+                    data: values,
+                    borderRadius: 8,
+                    backgroundColor: "#fb7185aa",
+                    borderColor: "#fda4af",
                     borderWidth: 1,
                 },
             ],

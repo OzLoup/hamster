@@ -8,17 +8,89 @@
         <div>
             <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Inteligencia de negocios</p>
             <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Reportes</h2>
-            <p class="mt-2 text-sm text-slate-300">Sigue el rendimiento de productos, tendencias diarias de ventas y crecimiento de ingresos.</p>
+            <p class="mt-2 text-sm text-slate-300">Sigue el rendimiento de productos, tendencias de ventas y control de tus compras (egresos).</p>
         </div>
-        <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-200">
-            <span class="h-2 w-2 animate-pulse rounded-full bg-brand-300"></span>
-            Vista de análisis en vivo
-        </span>
+        <div class="flex flex-wrap items-center gap-3">
+            <button
+                id="export-report"
+                type="button"
+                class="saas-btn saas-btn-muted rounded-xl px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+                aria-label="Exportar datos del informe en CSV"
+            >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75V3m0 12.75l-3.75-3.75M12 15.75l3.75-3.75M4.5 15.75v1.5A2.25 2.25 0 0 0 6.75 19.5h10.5a2.25 2.25 0 0 0 2.25-2.25v-1.5"/>
+                </svg>
+                Exportar CSV
+            </button>
+            <button
+                id="export-report-pdf"
+                type="button"
+                class="saas-btn saas-btn-muted rounded-xl px-3 py-2 text-xs disabled:cursor-not-allowed disabled:opacity-60"
+                disabled
+                aria-label="Exportar datos del informe en PDF"
+            >
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3h7.5m-9-3.75h.008v.008H6.75v-.008ZM6.75 6.75h1.5v1.5h-1.5v-1.5Zm0 3h1.5v1.5h-1.5V9.75Zm7.5-6.75H6.75A2.25 2.25 0 0 0 4.5 5.25v13.5a2.25 2.25 0 0 0 2.25 2.25h10.5A2.25 2.25 0 0 0 19.5 18.75V8.25L14.25 3Z"/>
+                </svg>
+                Exportar PDF
+            </button>
+            <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-200">
+                <span class="h-2 w-2 animate-pulse rounded-full bg-brand-300"></span>
+                Vista de análisis en vivo
+            </span>
+        </div>
     </div>
 </section>
 {% endblock %}
 
 {% block content %}
+<section class="saas-card mb-6 rounded-3xl p-5 sm:p-6">
+    <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div class="flex w-full flex-wrap gap-3">
+            <div class="w-full sm:w-48">
+                <label for="report-filter-preset" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Rango de fechas</label>
+                <select id="report-filter-preset" class="saas-select">
+                    <option value="all">Todo el tiempo</option>
+                    <option value="today">Hoy</option>
+                    <option value="yesterday">Ayer</option>
+                    <option value="last7">Últimos 7 días</option>
+                    <option value="last30">Últimos 30 días</option>
+                    <option value="thisMonth">Este mes</option>
+                    <option value="custom">Rango personalizado</option>
+                </select>
+            </div>
+            <div class="w-full sm:w-64">
+                <label for="report-filter-start" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Desde</label>
+                <input id="report-filter-start" type="datetime-local" class="saas-input" />
+            </div>
+            <div class="w-full sm:w-64">
+                <label for="report-filter-end" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Hasta</label>
+                <input id="report-filter-end" type="datetime-local" class="saas-input" />
+            </div>
+        </div>
+        <div class="flex items-center gap-3">
+            <p id="report-filter-summary" class="text-xs text-slate-400">Mostrando todas las ventas registradas.</p>
+            <button id="report-filter-clear" type="button" class="saas-btn saas-btn-muted shrink-0 rounded-xl px-3 py-2 text-xs">Limpiar</button>
+        </div>
+    </div>
+</section>
+
+<section class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <article class="saas-card rounded-2xl p-5">
+        <p class="text-xs uppercase tracking-wide text-slate-400">Total ventas</p>
+        <p class="mt-2 text-2xl font-semibold text-emerald-300" id="reports-stat-sales">$ 0</p>
+    </article>
+    <article class="saas-card rounded-2xl p-5">
+        <p class="text-xs uppercase tracking-wide text-slate-400">Total compras (egresos)</p>
+        <p class="mt-2 text-2xl font-semibold text-rose-300" id="reports-stat-purchases">$ 0</p>
+    </article>
+    <article class="saas-card rounded-2xl p-5">
+        <p class="text-xs uppercase tracking-wide text-slate-400">Balance</p>
+        <p class="mt-2 text-2xl font-semibold text-slate-100" id="reports-stat-balance">$ 0</p>
+    </article>
+</section>
+
 <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
@@ -56,7 +128,7 @@
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Ventas diarias</h3>
-            <span class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Últimos 7 días</span>
+            <span id="reports-daily-chart-label" class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Últimos 7 días</span>
         </div>
         <div id="reports-daily-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
         <div class="relative hidden h-64 w-full" id="reports-daily-chart-wrap">
@@ -67,11 +139,38 @@
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Ingresos mensuales</h3>
-            <span class="rounded-lg bg-brand-500/15 px-2.5 py-1 text-xs text-brand-200">Últimos 6 meses</span>
+            <span id="reports-monthly-chart-label" class="rounded-lg bg-brand-500/15 px-2.5 py-1 text-xs text-brand-200">Últimos 6 meses</span>
         </div>
         <div id="reports-monthly-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
         <div class="relative hidden h-64 w-full" id="reports-monthly-chart-wrap">
             <canvas id="reports-monthly-chart"></canvas>
+        </div>
+    </article>
+
+    <article class="saas-card rounded-3xl p-5 sm:p-6">
+        <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-slate-100">Compras por proveedor</h3>
+            <span class="rounded-lg bg-amber-500/15 px-2.5 py-1 text-xs text-amber-200">Top 5</span>
+        </div>
+        <div id="reports-top-suppliers-loading" class="space-y-3 animate-pulseSoft" aria-hidden="true">
+            <div class="h-10 rounded-xl bg-slate-800/70"></div>
+            <div class="h-10 rounded-xl bg-slate-800/70"></div>
+            <div class="h-10 rounded-xl bg-slate-800/70"></div>
+        </div>
+        <div id="reports-top-suppliers-empty" class="saas-empty hidden text-sm">
+            No hay datos de compras disponibles aún.
+        </div>
+        <div id="reports-top-suppliers-list" class="hidden space-y-2"></div>
+    </article>
+
+    <article class="saas-card rounded-3xl p-5 sm:p-6">
+        <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-slate-100">Compras mensuales</h3>
+            <span id="reports-purchases-chart-label" class="rounded-lg bg-rose-500/15 px-2.5 py-1 text-xs text-rose-200">Últimos 6 meses</span>
+        </div>
+        <div id="reports-purchases-chart-loading" class="h-64 animate-pulseSoft rounded-2xl bg-slate-800/70"></div>
+        <div class="relative hidden h-64 w-full" id="reports-purchases-chart-wrap">
+            <canvas id="reports-purchases-chart"></canvas>
         </div>
     </article>
 </section>
@@ -81,5 +180,7 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
 <script type="module" src="{{ url_for('static', path='/js/reports/page.js') }}"></script>
 {% endblock %}
