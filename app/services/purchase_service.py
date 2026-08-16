@@ -16,17 +16,27 @@ from app.services.exceptions import ConflictError, NotFoundError, ServiceError, 
 class PurchaseService:
     """Executes purchase business workflows: growing stock and updating product cost."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
     def list_purchases(self) -> list[Purchase]:
-        """Return all purchases including their line items."""
-        stmt = select(Purchase).options(selectinload(Purchase.purchase_items)).order_by(Purchase.id)
+        """Return all purchases for this business including their line items."""
+        stmt = (
+            select(Purchase)
+            .where(Purchase.business_id == self.business_id)
+            .options(selectinload(Purchase.purchase_items))
+            .order_by(Purchase.id)
+        )
         return list(self.db.scalars(stmt).all())
 
     def get_purchase(self, purchase_id: int) -> Purchase:
         """Return a single purchase with line items."""
-        stmt = select(Purchase).where(Purchase.id == purchase_id).options(selectinload(Purchase.purchase_items))
+        stmt = (
+            select(Purchase)
+            .where(Purchase.id == purchase_id, Purchase.business_id == self.business_id)
+            .options(selectinload(Purchase.purchase_items))
+        )
         purchase = self.db.scalar(stmt)
         if purchase is None:
             raise NotFoundError(f"Purchase {purchase_id} was not found.")
@@ -39,12 +49,16 @@ class PurchaseService:
                 raise ValidationError("A purchase must include at least one purchase item.")
 
             supplier = self.db.get(Supplier, payload.supplier_id)
-            if supplier is None:
+            if supplier is None or supplier.business_id != self.business_id:
                 raise NotFoundError(f"Supplier {payload.supplier_id} was not found.")
             if not supplier.is_active:
                 raise ValidationError(f"Supplier {payload.supplier_id} is inactive and cannot receive new purchases.")
 
-            existing = self.db.scalar(select(Purchase.id).where(Purchase.reference == payload.reference))
+            existing = self.db.scalar(
+                select(Purchase.id).where(
+                    Purchase.reference == payload.reference, Purchase.business_id == self.business_id
+                )
+            )
             if existing is not None:
                 raise ConflictError(f"Purchase reference '{payload.reference}' already exists.")
 
@@ -53,6 +67,7 @@ class PurchaseService:
                 raise ValidationError("Provided total_amount does not match the purchase item totals.")
 
             purchase = Purchase(
+                business_id=self.business_id,
                 supplier_id=payload.supplier_id,
                 reference=payload.reference,
                 total_amount=payload.total_amount,
@@ -62,7 +77,7 @@ class PurchaseService:
 
             for line in payload.purchase_items:
                 product = self.db.get(Product, line.product_id)
-                if product is None:
+                if product is None or product.business_id != self.business_id:
                     raise NotFoundError(f"Product {line.product_id} was not found.")
 
                 product.stock_quantity += line.quantity
@@ -98,7 +113,11 @@ class PurchaseService:
         updates = payload.model_dump(exclude_unset=True)
 
         if "reference" in updates and updates["reference"] != purchase.reference:
-            existing = self.db.scalar(select(Purchase.id).where(Purchase.reference == updates["reference"]))
+            existing = self.db.scalar(
+                select(Purchase.id).where(
+                    Purchase.reference == updates["reference"], Purchase.business_id == self.business_id
+                )
+            )
             if existing is not None:
                 raise ConflictError(f"Purchase reference '{updates['reference']}' already exists.")
 

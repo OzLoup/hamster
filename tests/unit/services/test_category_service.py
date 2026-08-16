@@ -7,13 +7,13 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from app.models.category import Category
 from app.schemas.category import CategoryCreate, CategoryUpdate
 from app.services.category_service import CategoryService
-from app.services.exceptions import ConflictError, ServiceError
-from tests.factories import create_product
+from app.services.exceptions import ConflictError, NotFoundError, ServiceError
+from tests.factories import create_business, create_product
 
 
 @pytest.fixture()
-def service(db_session):
-    return CategoryService(db_session)
+def service(db_session, business):
+    return CategoryService(db_session, business.id)
 
 
 def test_create_category_success(service):
@@ -37,6 +37,19 @@ def test_create_category_duplicate_name_raises_conflict(service):
     # Act / Assert
     with pytest.raises(ConflictError, match="already exists"):
         service.create_category(duplicate_payload)
+
+
+def test_create_category_same_name_allowed_across_different_businesses(service, db_session):
+    # Arrange
+    other_business = create_business(db_session, name="Other Business")
+    other_service = CategoryService(db_session, other_business.id)
+    service.create_category(CategoryCreate(name="Electronics", description="Business A"))
+
+    # Act
+    created = other_service.create_category(CategoryCreate(name="Electronics", description="Business B"))
+
+    # Assert
+    assert created.id is not None
 
 
 def test_update_category_success(service):
@@ -76,11 +89,12 @@ def test_delete_category_success(service, db_session):
     assert deleted is None
 
 
-def test_delete_category_with_assigned_products_raises_conflict(service, db_session):
+def test_delete_category_with_assigned_products_raises_conflict(service, db_session, business):
     # Arrange
     category = service.create_category(CategoryCreate(name="Electronics", description=None))
     create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="KB-DELETE-001",
         stock_quantity=10,
@@ -93,12 +107,23 @@ def test_delete_category_with_assigned_products_raises_conflict(service, db_sess
         service.delete_category(category.id)
 
 
+def test_get_category_from_another_business_raises_not_found(service, db_session):
+    # Arrange
+    other_business = create_business(db_session, name="Other Business")
+    other_service = CategoryService(db_session, other_business.id)
+    created = service.create_category(CategoryCreate(name="Electronics", description=None))
+
+    # Act / Assert
+    with pytest.raises(NotFoundError):
+        other_service.get_category(created.id)
+
+
 def test_create_category_integrity_error_raises_conflict_and_rolls_back():
     # Arrange
     db = MagicMock()
     db.scalar.return_value = None
     db.commit.side_effect = IntegrityError("INSERT", {}, Exception("constraint"))
-    service = CategoryService(db)
+    service = CategoryService(db, business_id=1)
     payload = CategoryCreate(name="Electronics", description=None)
 
     # Act / Assert
@@ -112,7 +137,7 @@ def test_create_category_sqlalchemy_error_raises_service_error_and_rolls_back():
     db = MagicMock()
     db.scalar.return_value = None
     db.commit.side_effect = SQLAlchemyError("db down")
-    service = CategoryService(db)
+    service = CategoryService(db, business_id=1)
     payload = CategoryCreate(name="Electronics", description=None)
 
     # Act / Assert
@@ -123,14 +148,14 @@ def test_create_category_sqlalchemy_error_raises_service_error_and_rolls_back():
 
 def test_update_category_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
-    existing = Category(id=10, name="Electronics", description="Old")
+    existing = Category(id=10, name="Electronics", description="Old", business_id=1)
 
     db = MagicMock()
     db.get.return_value = existing
     db.scalar.return_value = None
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = CategoryService(db)
+    service = CategoryService(db, business_id=1)
     payload = CategoryUpdate(name="Electronics and Gadgets")
 
     # Act / Assert
@@ -141,14 +166,14 @@ def test_update_category_sqlalchemy_error_raises_service_error_and_rolls_back():
 
 def test_delete_category_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
-    existing = Category(id=20, name="Electronics", description=None)
+    existing = Category(id=20, name="Electronics", description=None, business_id=1)
 
     db = MagicMock()
     db.get.return_value = existing
     db.scalar.return_value = None
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = CategoryService(db)
+    service = CategoryService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while deleting category"):

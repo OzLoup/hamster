@@ -24,8 +24,9 @@ SORTABLE_COLUMNS = {
 class ProductService:
     """Handles product and inventory business operations independent from API routes."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
     def list_products(
         self,
@@ -45,7 +46,7 @@ class ProductService:
         if page_size < 1 or page_size > 100:
             raise ValidationError("page_size must be between 1 and 100.")
 
-        conditions = []
+        conditions = [Product.business_id == self.business_id]
         if search:
             conditions.append(Product.name.ilike(f"%{search.strip()}%"))
         if category_id is not None:
@@ -59,11 +60,8 @@ class ProductService:
         elif stock_level == "good":
             conditions.append(Product.stock_quantity > MEDIUM_STOCK_MAX)
 
-        items_stmt = select(Product)
-        count_stmt = select(func.count(Product.id))
-        if conditions:
-            items_stmt = items_stmt.where(*conditions)
-            count_stmt = count_stmt.where(*conditions)
+        items_stmt = select(Product).where(*conditions)
+        count_stmt = select(func.count(Product.id)).where(*conditions)
 
         order_column = SORTABLE_COLUMNS.get(sort_by)
         if order_column is not None:
@@ -81,7 +79,7 @@ class ProductService:
     def get_product(self, product_id: int) -> Product:
         """Return one product or raise a not-found service error."""
         product = self.db.get(Product, product_id)
-        if product is None:
+        if product is None or product.business_id != self.business_id:
             raise NotFoundError(f"Product {product_id} was not found.")
         return product
 
@@ -91,7 +89,7 @@ class ProductService:
 
         # Temporary placeholder so the NOT NULL/unique sku column accepts the insert;
         # it is replaced with the real, id-based SKU right after the row gets its id.
-        product = Product(**payload.model_dump(), sku=f"TMP-{uuid.uuid4().hex}")
+        product = Product(**payload.model_dump(), sku=f"TMP-{uuid.uuid4().hex}", business_id=self.business_id)
         self.db.add(product)
 
         try:
@@ -163,7 +161,9 @@ class ProductService:
         return product
 
     def _ensure_category_exists(self, category_id: int) -> None:
-        exists = self.db.scalar(select(Category.id).where(Category.id == category_id))
+        exists = self.db.scalar(
+            select(Category.id).where(Category.id == category_id, Category.business_id == self.business_id)
+        )
         if exists is None:
             raise NotFoundError(f"Category {category_id} was not found.")
 

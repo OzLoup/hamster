@@ -9,12 +9,12 @@ from app.models.product import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.product_service import ProductService
-from tests.factories import create_category, create_product
+from tests.factories import create_business, create_category, create_product
 
 
 @pytest.fixture()
-def service(db_session):
-    return ProductService(db_session)
+def service(db_session, business):
+    return ProductService(db_session, business.id)
 
 
 def _build_product_create_payload(category_id):
@@ -27,9 +27,11 @@ def _build_product_create_payload(category_id):
     )
 
 
-def test_create_product_success(service, db_session):
+def test_create_product_success(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
     payload = _build_product_create_payload(category.id)
 
     # Act
@@ -41,9 +43,11 @@ def test_create_product_success(service, db_session):
     assert created.sku == f"PRD-{created.id:06d}"
 
 
-def test_create_product_generates_unique_sku_per_product(service, db_session):
+def test_create_product_generates_unique_sku_per_product(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
 
     # Act
     first = service.create_product(_build_product_create_payload(category.id))
@@ -62,9 +66,22 @@ def test_create_product_with_missing_category_raises_not_found(service):
         service.create_product(payload)
 
 
-def test_update_product_success(service, db_session):
+def test_create_product_rejects_category_from_another_business(service, db_session):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    other_business = create_business(db_session, name="Other Business")
+    other_category = create_category(db_session, business_id=other_business.id, name="Electronics")
+    payload = _build_product_create_payload(other_category.id)
+
+    # Act / Assert
+    with pytest.raises(NotFoundError, match=f"Category {other_category.id} was not found"):
+        service.create_product(payload)
+
+
+def test_update_product_success(service, db_session, business):
+    # Arrange
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
     product = service.create_product(_build_product_create_payload(category.id))
     update_payload = ProductUpdate(name="Gaming Keyboard", stock_quantity=45)
 
@@ -86,9 +103,11 @@ def test_update_product_schema_rejects_negative_stock_value():
         ProductUpdate(stock_quantity=invalid_stock)
 
 
-def test_update_product_with_model_construct_negative_stock_raises_validation_error(service, db_session):
+def test_update_product_with_model_construct_negative_stock_raises_validation_error(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
     product = service.create_product(_build_product_create_payload(category.id))
     invalid_payload = ProductUpdate.model_construct(stock_quantity=-1)
 
@@ -97,9 +116,11 @@ def test_update_product_with_model_construct_negative_stock_raises_validation_er
         service.update_product(product.id, invalid_payload)
 
 
-def test_delete_product_success(service, db_session):
+def test_delete_product_success(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
     product = service.create_product(_build_product_create_payload(category.id))
 
     # Act
@@ -108,6 +129,18 @@ def test_delete_product_success(service, db_session):
     # Assert
     deleted = db_session.get(Product, product.id)
     assert deleted is None
+
+
+def test_get_product_from_another_business_raises_not_found(service, db_session, business):
+    # Arrange
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    product = service.create_product(_build_product_create_payload(category.id))
+    other_business = create_business(db_session, name="Other Business")
+    other_service = ProductService(db_session, other_business.id)
+
+    # Act / Assert
+    with pytest.raises(NotFoundError):
+        other_service.get_product(product.id)
 
 
 def test_create_product_integrity_error_raises_conflict_and_rolls_back():
@@ -131,7 +164,7 @@ def test_create_product_integrity_error_raises_conflict_and_rolls_back():
 
     db.add.side_effect = assign_product_id
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
     payload = ProductCreate(
         category_id=1,
         name="Mechanical Keyboard",
@@ -167,7 +200,7 @@ def test_create_product_sqlalchemy_error_raises_service_error_and_rolls_back():
 
     db.add.side_effect = assign_product_id
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
     payload = ProductCreate(
         category_id=1,
         name="Mechanical Keyboard",
@@ -186,6 +219,7 @@ def test_update_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
     existing = Product(
         id=10,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="KB-100",
@@ -198,7 +232,7 @@ def test_update_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.get.return_value = existing
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
     payload = ProductUpdate(name="Updated Name")
 
     # Act / Assert
@@ -211,6 +245,7 @@ def test_delete_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
     existing = Product(
         id=20,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="KB-100",
@@ -223,7 +258,7 @@ def test_delete_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.get.return_value = existing
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while deleting product"):
@@ -231,9 +266,11 @@ def test_delete_product_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.rollback.assert_called_once()
 
 
-def test_set_active_status_deactivates_and_reactivates_product(service, db_session):
+def test_set_active_status_deactivates_and_reactivates_product(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for product tests")
+    category = create_category(
+        db_session, business_id=business.id, name="Electronics", description="Category for product tests"
+    )
     product = service.create_product(_build_product_create_payload(category.id))
     assert product.is_active is True
 
@@ -260,6 +297,7 @@ def test_set_active_status_sqlalchemy_error_raises_service_error_and_rolls_back(
     # Arrange
     existing = Product(
         id=22,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="KB-102",
@@ -273,7 +311,7 @@ def test_set_active_status_sqlalchemy_error_raises_service_error_and_rolls_back(
     db.get.return_value = existing
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while updating product status"):
@@ -285,6 +323,7 @@ def test_delete_product_integrity_error_raises_conflict_and_rolls_back():
     # Arrange: deleting a product still referenced by sale_items violates the FK constraint.
     existing = Product(
         id=21,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="KB-101",
@@ -297,7 +336,7 @@ def test_delete_product_integrity_error_raises_conflict_and_rolls_back():
     db.get.return_value = existing
     db.commit.side_effect = IntegrityError("DELETE", {}, Exception("foreign key constraint"))
 
-    service = ProductService(db)
+    service = ProductService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ConflictError, match="could not be deleted because it has associated sale records"):
@@ -314,12 +353,28 @@ def test_delete_product_integrity_error_raises_conflict_and_rolls_back():
         (None, ["Low Stock", "Medium Stock", "Good Stock"]),
     ],
 )
-def test_list_products_filters_by_stock_level(service, db_session, stock_level, expected_names):
+def test_list_products_filters_by_stock_level(service, db_session, business, stock_level, expected_names):
     # Arrange
-    category = create_category(db_session, name="Electronics")
-    create_product(db_session, category_id=category.id, sku="SORT-001", name="Low Stock", stock_quantity=5)
-    create_product(db_session, category_id=category.id, sku="SORT-002", name="Medium Stock", stock_quantity=20)
-    create_product(db_session, category_id=category.id, sku="SORT-003", name="Good Stock", stock_quantity=100)
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    create_product(
+        db_session, business_id=business.id, category_id=category.id, sku="SORT-001", name="Low Stock", stock_quantity=5
+    )
+    create_product(
+        db_session,
+        business_id=business.id,
+        category_id=category.id,
+        sku="SORT-002",
+        name="Medium Stock",
+        stock_quantity=20,
+    )
+    create_product(
+        db_session,
+        business_id=business.id,
+        category_id=category.id,
+        sku="SORT-003",
+        name="Good Stock",
+        stock_quantity=100,
+    )
 
     # Act
     products, total = service.list_products(stock_level=stock_level)
@@ -327,6 +382,23 @@ def test_list_products_filters_by_stock_level(service, db_session, stock_level, 
     # Assert
     assert total == len(expected_names)
     assert sorted(p.name for p in products) == sorted(expected_names)
+
+
+def test_list_products_only_includes_this_business(service, db_session, business):
+    # Arrange
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    create_product(db_session, business_id=business.id, category_id=category.id, sku="MINE-001", name="Mine")
+
+    other_business = create_business(db_session, name="Other Business")
+    other_category = create_category(db_session, business_id=other_business.id, name="Electronics")
+    create_product(db_session, business_id=other_business.id, category_id=other_category.id, sku="THEIRS-001", name="Theirs")
+
+    # Act
+    products, total = service.list_products()
+
+    # Assert
+    assert total == 1
+    assert [p.name for p in products] == ["Mine"]
 
 
 @pytest.mark.parametrize(
@@ -341,11 +413,12 @@ def test_list_products_filters_by_stock_level(service, db_session, stock_level, 
         (None, "asc", ["Alpha", "Bravo", "Charlie"]),
     ],
 )
-def test_list_products_sorts_by_requested_column(service, db_session, sort_by, sort_dir, expected_order):
+def test_list_products_sorts_by_requested_column(service, db_session, business, sort_by, sort_dir, expected_order):
     # Arrange
-    category = create_category(db_session, name="Electronics")
+    category = create_category(db_session, business_id=business.id, name="Electronics")
     create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="SORT-ALPHA",
         name="Alpha",
@@ -355,6 +428,7 @@ def test_list_products_sorts_by_requested_column(service, db_session, sort_by, s
     )
     create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="SORT-BRAVO",
         name="Bravo",
@@ -364,6 +438,7 @@ def test_list_products_sorts_by_requested_column(service, db_session, sort_by, s
     )
     create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="SORT-CHARLIE",
         name="Charlie",
@@ -379,12 +454,12 @@ def test_list_products_sorts_by_requested_column(service, db_session, sort_by, s
     assert [p.name for p in products] == expected_order
 
 
-def test_list_products_sorts_by_category_name(service, db_session):
+def test_list_products_sorts_by_category_name(service, db_session, business):
     # Arrange
-    zeta_category = create_category(db_session, name="Zeta Category")
-    alpha_category = create_category(db_session, name="Alpha Category")
-    create_product(db_session, category_id=zeta_category.id, sku="SORT-CAT-1", name="In Zeta")
-    create_product(db_session, category_id=alpha_category.id, sku="SORT-CAT-2", name="In Alpha")
+    zeta_category = create_category(db_session, business_id=business.id, name="Zeta Category")
+    alpha_category = create_category(db_session, business_id=business.id, name="Alpha Category")
+    create_product(db_session, business_id=business.id, category_id=zeta_category.id, sku="SORT-CAT-1", name="In Zeta")
+    create_product(db_session, business_id=business.id, category_id=alpha_category.id, sku="SORT-CAT-2", name="In Alpha")
 
     # Act
     products, _ = service.list_products(sort_by="category", sort_dir="asc")

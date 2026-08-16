@@ -31,8 +31,9 @@ def _resolve_timezone(tz_name: str | None) -> ZoneInfo:
 class DashboardService:
     """Aggregates real inventory and sales data for the home dashboard."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
     def get_summary(self, tz_name: str | None) -> DashboardSummary:
         tz = _resolve_timezone(tz_name)
@@ -45,7 +46,9 @@ class DashboardService:
         prior_week_start = today_start - timedelta(days=13)
 
         total_products = self._count_active_products()
-        total_categories = int(self.db.scalar(select(func.count(Category.id))) or 0)
+        total_categories = int(
+            self.db.scalar(select(func.count(Category.id)).where(Category.business_id == self.business_id)) or 0
+        )
         low_stock_products = self._count_low_stock_products()
 
         sales_this_month = self._count_sales(start=month_start, end=None)
@@ -80,7 +83,11 @@ class DashboardService:
                 Category.name.label("category_name"),
             )
             .join(Category, Category.id == Product.category_id)
-            .where(Product.is_active == True, Product.stock_quantity <= LOW_STOCK_THRESHOLD)  # noqa: E712
+            .where(
+                Product.business_id == self.business_id,
+                Product.is_active == True,  # noqa: E712
+                Product.stock_quantity <= LOW_STOCK_THRESHOLD,
+            )
             .order_by(Product.stock_quantity.asc(), Product.name.asc())
         )
         rows = self.db.execute(stmt).all()
@@ -96,24 +103,28 @@ class DashboardService:
         ]
 
     def _count_active_products(self) -> int:
-        return int(self.db.scalar(select(func.count(Product.id)).where(Product.is_active == True)) or 0)  # noqa: E712
+        stmt = select(func.count(Product.id)).where(
+            Product.business_id == self.business_id, Product.is_active == True  # noqa: E712
+        )
+        return int(self.db.scalar(stmt) or 0)
 
     def _count_low_stock_products(self) -> int:
         stmt = select(func.count(Product.id)).where(
+            Product.business_id == self.business_id,
             Product.is_active == True,  # noqa: E712
             Product.stock_quantity <= LOW_STOCK_THRESHOLD,
         )
         return int(self.db.scalar(stmt) or 0)
 
     def _count_sales(self, *, start: datetime, end: datetime | None) -> int:
-        stmt = select(func.count(Sale.id)).where(Sale.created_at >= start)
+        stmt = select(func.count(Sale.id)).where(Sale.business_id == self.business_id, Sale.created_at >= start)
         if end is not None:
             stmt = stmt.where(Sale.created_at < end)
         return int(self.db.scalar(stmt) or 0)
 
     def _sum_revenue(self, *, start: datetime, end: datetime) -> Decimal:
         stmt = select(func.coalesce(func.sum(Sale.total_amount), 0)).where(
-            Sale.created_at >= start, Sale.created_at < end
+            Sale.business_id == self.business_id, Sale.created_at >= start, Sale.created_at < end
         )
         total = self.db.scalar(stmt) or Decimal("0.00")
         return Decimal(total).quantize(Decimal("0.01"))
@@ -139,7 +150,7 @@ class DashboardService:
 
         stmt = (
             select(func.count(Product.id))
-            .where(Product.is_active == True)  # noqa: E712
+            .where(Product.business_id == self.business_id, Product.is_active == True)  # noqa: E712
             .group_by(Product.category_id)
             .order_by(func.count(Product.id).desc())
             .limit(1)

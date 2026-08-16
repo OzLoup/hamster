@@ -1,29 +1,43 @@
 from app.models.product import Product
-from tests.factories import create_category, create_product, sale_request_body
+from tests.factories import create_business, create_category, create_product, sale_request_body
 
 BASE_URL = "/api/v1/sales"
 
 
-def test_list_sales_returns_empty_list(client):
+def test_create_sale_returns_404_for_product_from_another_business(authenticated_client, db_session):
+    # Arrange
+    other_business = create_business(db_session, name="Other Business")
+    other_category = create_category(db_session, business_id=other_business.id)
+    other_product = create_product(db_session, business_id=other_business.id, category_id=other_category.id, sku="OTHER-001")
+    request_body = sale_request_body(reference="SALE-CROSS", product_id=other_product.id, quantity=1)
+
+    # Act
+    response = authenticated_client.post(BASE_URL, json=request_body)
+
+    # Assert
+    assert response.status_code == 404
+
+
+def test_list_sales_returns_empty_list(authenticated_client):
     # Arrange
     url = BASE_URL
 
     # Act
-    response = client.get(url)
+    response = authenticated_client.get(url)
 
     # Assert
     assert response.status_code == 200
     assert response.json() == []
 
 
-def test_create_sale_returns_201_and_decrements_stock(client, db_session):
+def test_create_sale_returns_201_and_decrements_stock(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10, sku="SALE-PRD-101")
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10, sku="SALE-PRD-101")
     request_body = sale_request_body(reference="SALE-001", product_id=product.id, quantity=2)
 
     # Act
-    response = client.post(BASE_URL, json=request_body)
+    response = authenticated_client.post(BASE_URL, json=request_body)
 
     # Assert
     assert response.status_code == 201
@@ -38,14 +52,14 @@ def test_create_sale_returns_201_and_decrements_stock(client, db_session):
     assert refreshed_product.stock_quantity == 8
 
 
-def test_list_sales_returns_created_sales(client, db_session):
+def test_list_sales_returns_created_sales(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-102")
-    client.post(BASE_URL, json=sale_request_body(reference="SALE-010", product_id=product.id, quantity=1))
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-102")
+    authenticated_client.post(BASE_URL, json=sale_request_body(reference="SALE-010", product_id=product.id, quantity=1))
 
     # Act
-    response = client.get(BASE_URL)
+    response = authenticated_client.get(BASE_URL)
 
     # Assert
     assert response.status_code == 200
@@ -54,17 +68,17 @@ def test_list_sales_returns_created_sales(client, db_session):
     assert payload[0]["reference"] == "SALE-010"
 
 
-def test_get_sale_by_id_returns_sale(client, db_session):
+def test_get_sale_by_id_returns_sale(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-103")
-    created = client.post(
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-103")
+    created = authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-020", product_id=product.id, quantity=1),
     ).json()
 
     # Act
-    response = client.get(f"{BASE_URL}/{created['id']}")
+    response = authenticated_client.get(f"{BASE_URL}/{created['id']}")
 
     # Assert
     assert response.status_code == 200
@@ -74,62 +88,62 @@ def test_get_sale_by_id_returns_sale(client, db_session):
     assert len(payload["sale_items"]) == 1
 
 
-def test_get_sale_by_id_returns_404_when_missing(client):
+def test_get_sale_by_id_returns_404_when_missing(authenticated_client):
     # Arrange
     missing_id = 9999
 
     # Act
-    response = client.get(f"{BASE_URL}/{missing_id}")
+    response = authenticated_client.get(f"{BASE_URL}/{missing_id}")
 
     # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == f"Sale {missing_id} was not found."
 
 
-def test_create_sale_returns_409_for_duplicate_reference(client, db_session):
+def test_create_sale_returns_409_for_duplicate_reference(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-104")
-    client.post(BASE_URL, json=sale_request_body(reference="SALE-030", product_id=product.id, quantity=1))
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-104")
+    authenticated_client.post(BASE_URL, json=sale_request_body(reference="SALE-030", product_id=product.id, quantity=1))
 
     # Act
-    response = client.post(BASE_URL, json=sale_request_body(reference="SALE-030", product_id=product.id, quantity=1))
+    response = authenticated_client.post(BASE_URL, json=sale_request_body(reference="SALE-030", product_id=product.id, quantity=1))
 
     # Assert
     assert response.status_code == 409
     assert "already exists" in response.json()["detail"]
 
 
-def test_create_sale_returns_400_for_mismatched_total(client, db_session):
+def test_create_sale_returns_400_for_mismatched_total(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-105")
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-105")
     invalid_body = sale_request_body(reference="SALE-040", product_id=product.id, quantity=1)
     invalid_body["total_amount"] = "1.00"
 
     # Act
-    response = client.post(BASE_URL, json=invalid_body)
+    response = authenticated_client.post(BASE_URL, json=invalid_body)
 
     # Assert
     assert response.status_code == 400
     assert "total_amount does not match" in response.json()["detail"]
 
 
-def test_create_sale_returns_400_for_insufficient_stock(client, db_session):
+def test_create_sale_returns_400_for_insufficient_stock(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-106", stock_quantity=1)
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-106", stock_quantity=1)
     request_body = sale_request_body(reference="SALE-050", product_id=product.id, quantity=2)
 
     # Act
-    response = client.post(BASE_URL, json=request_body)
+    response = authenticated_client.post(BASE_URL, json=request_body)
 
     # Assert
     assert response.status_code == 400
     assert "Insufficient stock" in response.json()["detail"]
 
 
-def test_create_sale_returns_422_for_invalid_payload(client):
+def test_create_sale_returns_422_for_invalid_payload(authenticated_client):
     # Arrange
     invalid_body = {
         "reference": "SALE-060",
@@ -146,7 +160,7 @@ def test_create_sale_returns_422_for_invalid_payload(client):
     }
 
     # Act
-    response = client.post(BASE_URL, json=invalid_body)
+    response = authenticated_client.post(BASE_URL, json=invalid_body)
 
     # Assert
     assert response.status_code == 422
@@ -154,18 +168,18 @@ def test_create_sale_returns_422_for_invalid_payload(client):
     assert len(payload["detail"]) >= 1
 
 
-def test_update_sale_returns_200_and_updated_body(client, db_session):
+def test_update_sale_returns_200_and_updated_body(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-107")
-    created = client.post(
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-107")
+    created = authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-070", product_id=product.id, quantity=1),
     ).json()
     update_body = {"reference": "SALE-070-UPDATED", "total_amount": "79.99"}
 
     # Act
-    response = client.patch(f"{BASE_URL}/{created['id']}", json=update_body)
+    response = authenticated_client.patch(f"{BASE_URL}/{created['id']}", json=update_body)
 
     # Assert
     assert response.status_code == 200
@@ -175,35 +189,35 @@ def test_update_sale_returns_200_and_updated_body(client, db_session):
     assert payload["total_amount"] == "79.99"
 
 
-def test_update_sale_returns_404_when_missing(client):
+def test_update_sale_returns_404_when_missing(authenticated_client):
     # Arrange
     missing_id = 8888
 
     # Act
-    response = client.patch(f"{BASE_URL}/{missing_id}", json={"reference": "SALE-404"})
+    response = authenticated_client.patch(f"{BASE_URL}/{missing_id}", json={"reference": "SALE-404"})
 
     # Assert
     assert response.status_code == 404
     assert response.json()["detail"] == f"Sale {missing_id} was not found."
 
 
-def test_update_sale_returns_409_for_duplicate_reference(client, db_session):
+def test_update_sale_returns_409_for_duplicate_reference(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    first_product = create_product(db_session, category_id=category.id, sku="SALE-PRD-108")
-    second_product = create_product(db_session, category_id=category.id, sku="SALE-PRD-109")
+    category = create_category(db_session, business_id=business.id)
+    first_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-108")
+    second_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-109")
 
-    first = client.post(
+    first = authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-080", product_id=first_product.id, quantity=1),
     ).json()
-    client.post(
+    authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-081", product_id=second_product.id, quantity=1),
     )
 
     # Act
-    response = client.patch(
+    response = authenticated_client.patch(
         f"{BASE_URL}/{first['id']}",
         json={"reference": "SALE-081"},
     )
@@ -213,17 +227,17 @@ def test_update_sale_returns_409_for_duplicate_reference(client, db_session):
     assert "already exists" in response.json()["detail"]
 
 
-def test_update_sale_returns_422_for_invalid_payload(client, db_session):
+def test_update_sale_returns_422_for_invalid_payload(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-110")
-    created = client.post(
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-110")
+    created = authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-090", product_id=product.id, quantity=1),
     ).json()
 
     # Act
-    response = client.patch(
+    response = authenticated_client.patch(
         f"{BASE_URL}/{created['id']}",
         json={"total_amount": "-1.00"},
     )
@@ -234,17 +248,17 @@ def test_update_sale_returns_422_for_invalid_payload(client, db_session):
     assert len(payload["detail"]) >= 1
 
 
-def test_delete_sale_returns_405_method_not_allowed(client, db_session):
+def test_delete_sale_returns_405_method_not_allowed(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, sku="SALE-PRD-111")
-    created = client.post(
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-PRD-111")
+    created = authenticated_client.post(
         BASE_URL,
         json=sale_request_body(reference="SALE-100", product_id=product.id, quantity=1),
     ).json()
 
     # Act
-    response = client.delete(f"{BASE_URL}/{created['id']}")
+    response = authenticated_client.delete(f"{BASE_URL}/{created['id']}")
 
     # Assert
     assert response.status_code == 405

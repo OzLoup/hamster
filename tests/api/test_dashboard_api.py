@@ -4,9 +4,9 @@ BASE_URL = "/api/v1/dashboard/summary"
 LOW_STOCK_URL = "/api/v1/dashboard/low-stock-products"
 
 
-def test_get_dashboard_summary_returns_zeros_when_empty(client):
+def test_get_dashboard_summary_returns_zeros_when_empty(authenticated_client):
     # Act
-    response = client.get(BASE_URL)
+    response = authenticated_client.get(BASE_URL)
 
     # Assert
     assert response.status_code == 200
@@ -24,14 +24,14 @@ def test_get_dashboard_summary_returns_zeros_when_empty(client):
     assert payload["sales_trend"]["level"] == "neutral"
 
 
-def test_get_dashboard_summary_reflects_real_catalog_data(client, db_session):
+def test_get_dashboard_summary_reflects_real_catalog_data(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics")
-    create_product(db_session, category_id=category.id, sku="DASH-API-001", stock_quantity=5)
-    create_product(db_session, category_id=category.id, sku="DASH-API-002", stock_quantity=50)
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    create_product(db_session, business_id=business.id, category_id=category.id, sku="DASH-API-001", stock_quantity=5)
+    create_product(db_session, business_id=business.id, category_id=category.id, sku="DASH-API-002", stock_quantity=50)
 
     # Act
-    response = client.get(BASE_URL)
+    response = authenticated_client.get(BASE_URL)
 
     # Assert
     assert response.status_code == 200
@@ -41,40 +41,40 @@ def test_get_dashboard_summary_reflects_real_catalog_data(client, db_session):
     assert payload["low_stock_products"] == 1
 
 
-def test_get_dashboard_summary_accepts_timezone_query_param(client, db_session):
+def test_get_dashboard_summary_accepts_timezone_query_param(authenticated_client, db_session, business):
     # Act
-    response = client.get(BASE_URL, params={"tz": "America/Bogota"})
+    response = authenticated_client.get(BASE_URL, params={"tz": "America/Bogota"})
 
     # Assert
     assert response.status_code == 200
 
 
-def test_get_dashboard_summary_falls_back_for_invalid_timezone(client):
+def test_get_dashboard_summary_falls_back_for_invalid_timezone(authenticated_client):
     # Act
-    response = client.get(BASE_URL, params={"tz": "Not/A_Real_Zone"})
+    response = authenticated_client.get(BASE_URL, params={"tz": "Not/A_Real_Zone"})
 
     # Assert
     assert response.status_code == 200
     assert response.json()["total_products"] == 0
 
 
-def test_list_low_stock_products_returns_empty_list_when_none(client):
+def test_list_low_stock_products_returns_empty_list_when_none(authenticated_client):
     # Act
-    response = client.get(LOW_STOCK_URL)
+    response = authenticated_client.get(LOW_STOCK_URL)
 
     # Assert
     assert response.status_code == 200
     assert response.json() == []
 
 
-def test_list_low_stock_products_returns_matching_products(client, db_session):
+def test_list_low_stock_products_returns_matching_products(authenticated_client, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics")
-    create_product(db_session, category_id=category.id, sku="DASH-API-LOW-001", name="Low Stock", stock_quantity=2)
-    create_product(db_session, category_id=category.id, sku="DASH-API-LOW-002", name="Plenty", stock_quantity=80)
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    create_product(db_session, business_id=business.id, category_id=category.id, sku="DASH-API-LOW-001", name="Low Stock", stock_quantity=2)
+    create_product(db_session, business_id=business.id, category_id=category.id, sku="DASH-API-LOW-002", name="Plenty", stock_quantity=80)
 
     # Act
-    response = client.get(LOW_STOCK_URL)
+    response = authenticated_client.get(LOW_STOCK_URL)
 
     # Assert
     assert response.status_code == 200

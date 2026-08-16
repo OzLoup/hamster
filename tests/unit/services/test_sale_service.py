@@ -8,14 +8,14 @@ from app.models.product import Product
 from app.models.sale import Sale
 from app.schemas.sale import SaleCreate, SaleUpdate
 from app.schemas.sale_item import SaleItemCreate
-from app.services.exceptions import ConflictError, ServiceError, ValidationError
+from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.sale_service import SaleService
-from tests.factories import create_category, create_product
+from tests.factories import create_business, create_category, create_product
 
 
 @pytest.fixture()
-def service(db_session):
-    return SaleService(db_session)
+def service(db_session, business):
+    return SaleService(db_session, business.id)
 
 
 def _build_sale_create_payload(
@@ -42,11 +42,12 @@ def _build_sale_create_payload(
     )
 
 
-def test_create_sale_success_and_decrements_stock(service, db_session):
+def test_create_sale_success_and_decrements_stock(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for sale tests")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for sale tests")
     product = create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="SALE-KB-100",
         stock_quantity=10,
@@ -71,10 +72,10 @@ def test_create_sale_success_and_decrements_stock(service, db_session):
     assert refreshed.stock_quantity == 8
 
 
-def test_create_sale_duplicate_reference_raises_conflict(service, db_session):
+def test_create_sale_duplicate_reference_raises_conflict(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for sale tests")
-    product = create_product(db_session, category_id=category.id, sku="SALE-KB-200")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for sale tests")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-KB-200")
     service.create_sale(
         _build_sale_create_payload(
             reference="SALE-001",
@@ -95,10 +96,10 @@ def test_create_sale_duplicate_reference_raises_conflict(service, db_session):
         service.create_sale(duplicate_payload)
 
 
-def test_create_sale_with_invalid_total_raises_validation_error(service, db_session):
+def test_create_sale_with_invalid_total_raises_validation_error(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for sale tests")
-    product = create_product(db_session, category_id=category.id, sku="SALE-KB-201")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for sale tests")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-KB-201")
     payload = SaleCreate(
         reference="SALE-002",
         payment_method="cash",
@@ -118,10 +119,10 @@ def test_create_sale_with_invalid_total_raises_validation_error(service, db_sess
         service.create_sale(payload)
 
 
-def test_update_sale_success(service, db_session):
+def test_update_sale_success(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for sale tests")
-    product = create_product(db_session, category_id=category.id, sku="SALE-KB-300")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for sale tests")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-KB-300")
     created = service.create_sale(
         _build_sale_create_payload(
             reference="SALE-003",
@@ -141,11 +142,11 @@ def test_update_sale_success(service, db_session):
     assert updated.total_amount == Decimal("79.99")
 
 
-def test_update_sale_duplicate_reference_raises_conflict(service, db_session):
+def test_update_sale_duplicate_reference_raises_conflict(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for sale tests")
-    first_product = create_product(db_session, category_id=category.id, sku="SALE-KB-400")
-    second_product = create_product(db_session, category_id=category.id, sku="SALE-KB-401")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for sale tests")
+    first_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-KB-400")
+    second_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="SALE-KB-401")
 
     first_sale = service.create_sale(
         _build_sale_create_payload(
@@ -168,6 +169,23 @@ def test_update_sale_duplicate_reference_raises_conflict(service, db_session):
     # Act / Assert
     with pytest.raises(ConflictError, match="already exists"):
         service.update_sale(first_sale.id, duplicate_ref_payload)
+
+
+def test_create_sale_rejects_product_from_another_business(service, db_session):
+    # Arrange
+    other_business = create_business(db_session, name="Other Business")
+    other_category = create_category(db_session, business_id=other_business.id, name="Electronics")
+    other_product = create_product(db_session, business_id=other_business.id, category_id=other_category.id, sku="OTHER-001")
+    payload = _build_sale_create_payload(
+        reference="SALE-CROSS-TENANT",
+        product_id=other_product.id,
+        quantity=1,
+        unit_price=Decimal("79.99"),
+    )
+
+    # Act / Assert
+    with pytest.raises(NotFoundError, match=f"Product {other_product.id} was not found"):
+        service.create_sale(payload)
 
 
 def test_delete_sale_not_supported_in_service_contract(service):
@@ -195,6 +213,7 @@ def test_create_sale_integrity_error_raises_conflict_and_rolls_back():
 
     product = Product(
         id=1,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="SALE-KB-500",
@@ -216,7 +235,7 @@ def test_create_sale_integrity_error_raises_conflict_and_rolls_back():
 
     db.add.side_effect = assign_sale_id
 
-    service = SaleService(db)
+    service = SaleService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ConflictError, match="could not be created due to a data conflict"):
@@ -238,6 +257,7 @@ def test_create_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
 
     product = Product(
         id=1,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="SALE-KB-501",
@@ -257,7 +277,7 @@ def test_create_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
 
     db.add.side_effect = assign_sale_id
 
-    service = SaleService(db)
+    service = SaleService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while creating sale"):
@@ -273,7 +293,7 @@ def test_update_sale_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.scalar.side_effect = [existing_sale, None]
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = SaleService(db)
+    service = SaleService(db, business_id=1)
     payload = SaleUpdate(reference="SALE-300-UPDATED")
 
     # Act / Assert

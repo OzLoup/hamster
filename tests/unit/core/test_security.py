@@ -47,9 +47,12 @@ def test_session_token_roundtrip_returns_the_same_user_id():
 
 
 def test_read_session_token_rejects_a_tampered_token():
-    # Arrange
+    # Arrange: flip a character in the payload segment (not the last char, whose base64
+    # padding bits can be a no-op) so the signature verification is guaranteed to fail.
     token = create_session_token(42)
-    tampered = token[:-1] + ("a" if token[-1] != "a" else "b")
+    midpoint = len(token) // 2
+    flipped_char = "a" if token[midpoint] != "a" else "b"
+    tampered = token[:midpoint] + flipped_char + token[midpoint + 1 :]
 
     # Act / Assert
     assert read_session_token(tampered, max_age_seconds=3600) is None

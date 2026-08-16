@@ -11,12 +11,12 @@ from app.schemas.purchase import PurchaseCreate, PurchaseUpdate
 from app.schemas.purchase_item import PurchaseItemCreate
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.purchase_service import PurchaseService
-from tests.factories import create_category, create_product, create_supplier
+from tests.factories import create_business, create_category, create_product, create_supplier
 
 
 @pytest.fixture()
-def service(db_session):
-    return PurchaseService(db_session)
+def service(db_session, business):
+    return PurchaseService(db_session, business.id)
 
 
 def _build_purchase_create_payload(
@@ -43,12 +43,13 @@ def _build_purchase_create_payload(
     )
 
 
-def test_create_purchase_success_increments_stock_and_updates_cost(service, db_session):
+def test_create_purchase_success_increments_stock_and_updates_cost(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
     product = create_product(
         db_session,
+        business_id=business.id,
         category_id=category.id,
         sku="PUR-KB-100",
         stock_quantity=10,
@@ -75,10 +76,10 @@ def test_create_purchase_success_increments_stock_and_updates_cost(service, db_s
     assert refreshed.cost == Decimal("35.50")
 
 
-def test_create_purchase_with_missing_supplier_raises_not_found(service, db_session):
+def test_create_purchase_with_missing_supplier_raises_not_found(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    product = create_product(db_session, category_id=category.id, sku="PUR-KB-101")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-101")
     payload = _build_purchase_create_payload(
         reference="PUR-002",
         supplier_id=999,
@@ -92,13 +93,13 @@ def test_create_purchase_with_missing_supplier_raises_not_found(service, db_sess
         service.create_purchase(payload)
 
 
-def test_create_purchase_with_inactive_supplier_raises_validation_error(service, db_session):
+def test_create_purchase_with_inactive_supplier_raises_validation_error(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
     service.db.get(Supplier, supplier.id).is_active = False
     db_session.commit()
-    product = create_product(db_session, category_id=category.id, sku="PUR-KB-102")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-102")
     payload = _build_purchase_create_payload(
         reference="PUR-003",
         supplier_id=supplier.id,
@@ -112,11 +113,11 @@ def test_create_purchase_with_inactive_supplier_raises_validation_error(service,
         service.create_purchase(payload)
 
 
-def test_create_purchase_duplicate_reference_raises_conflict(service, db_session):
+def test_create_purchase_duplicate_reference_raises_conflict(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
-    product = create_product(db_session, category_id=category.id, sku="PUR-KB-200")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-200")
     service.create_purchase(
         _build_purchase_create_payload(
             reference="PUR-004",
@@ -139,11 +140,11 @@ def test_create_purchase_duplicate_reference_raises_conflict(service, db_session
         service.create_purchase(duplicate_payload)
 
 
-def test_create_purchase_with_invalid_total_raises_validation_error(service, db_session):
+def test_create_purchase_with_invalid_total_raises_validation_error(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
-    product = create_product(db_session, category_id=category.id, sku="PUR-KB-201")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-201")
     payload = PurchaseCreate(
         reference="PUR-005",
         supplier_id=supplier.id,
@@ -163,11 +164,11 @@ def test_create_purchase_with_invalid_total_raises_validation_error(service, db_
         service.create_purchase(payload)
 
 
-def test_update_purchase_success(service, db_session):
+def test_update_purchase_success(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
-    product = create_product(db_session, category_id=category.id, sku="PUR-KB-300")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-300")
     created = service.create_purchase(
         _build_purchase_create_payload(
             reference="PUR-006",
@@ -187,12 +188,12 @@ def test_update_purchase_success(service, db_session):
     assert updated.reference == "PUR-006-UPDATED"
 
 
-def test_update_purchase_duplicate_reference_raises_conflict(service, db_session):
+def test_update_purchase_duplicate_reference_raises_conflict(service, db_session, business):
     # Arrange
-    category = create_category(db_session, name="Electronics", description="Category for purchase tests")
-    supplier = create_supplier(db_session, name="Acme Supplies")
-    first_product = create_product(db_session, category_id=category.id, sku="PUR-KB-400")
-    second_product = create_product(db_session, category_id=category.id, sku="PUR-KB-401")
+    category = create_category(db_session, business_id=business.id, name="Electronics", description="Category for purchase tests")
+    supplier = create_supplier(db_session, business_id=business.id, name="Acme Supplies")
+    first_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-400")
+    second_product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-401")
 
     first_purchase = service.create_purchase(
         _build_purchase_create_payload(
@@ -219,6 +220,25 @@ def test_update_purchase_duplicate_reference_raises_conflict(service, db_session
         service.update_purchase(first_purchase.id, duplicate_ref_payload)
 
 
+def test_create_purchase_rejects_supplier_from_another_business(service, db_session, business):
+    # Arrange
+    category = create_category(db_session, business_id=business.id, name="Electronics")
+    product = create_product(db_session, business_id=business.id, category_id=category.id, sku="PUR-KB-900")
+    other_business = create_business(db_session, name="Other Business")
+    other_supplier = create_supplier(db_session, business_id=other_business.id, name="Other Supplier")
+    payload = _build_purchase_create_payload(
+        reference="PUR-CROSS-TENANT",
+        supplier_id=other_supplier.id,
+        product_id=product.id,
+        quantity=1,
+        unit_cost=Decimal("10.00"),
+    )
+
+    # Act / Assert
+    with pytest.raises(NotFoundError, match=f"Supplier {other_supplier.id} was not found"):
+        service.create_purchase(payload)
+
+
 def test_delete_purchase_not_supported_in_service_contract(service):
     # Arrange
     method_name = "delete_purchase"
@@ -240,9 +260,10 @@ def test_create_purchase_sqlalchemy_error_raises_service_error_and_rolls_back():
     )
     payload = PurchaseCreate(reference="PUR-009", supplier_id=1, total_amount=Decimal("10.00"), purchase_items=[line])
 
-    supplier = Supplier(id=1, name="Acme Supplies", is_active=True)
+    supplier = Supplier(id=1, business_id=1, name="Acme Supplies", is_active=True)
     product = Product(
         id=1,
+        business_id=1,
         category_id=1,
         name="Mechanical Keyboard",
         sku="PUR-KB-500",
@@ -265,7 +286,7 @@ def test_create_purchase_sqlalchemy_error_raises_service_error_and_rolls_back():
 
     db.add.side_effect = assign_purchase_id
 
-    service = PurchaseService(db)
+    service = PurchaseService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while creating purchase"):
@@ -281,7 +302,7 @@ def test_update_purchase_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.scalar.side_effect = [existing_purchase, None]
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = PurchaseService(db)
+    service = PurchaseService(db, business_id=1)
     payload = PurchaseUpdate(reference="PUR-300-UPDATED")
 
     # Act / Assert

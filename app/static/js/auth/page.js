@@ -34,7 +34,10 @@ function setSubmitting(isSubmitting) {
     }
 }
 
-function redirectTarget() {
+function redirectTarget(currentUser) {
+    if (currentUser.is_superuser) {
+        return "/admin";
+    }
     const params = new URLSearchParams(window.location.search);
     const next = params.get("next");
     return next && next.startsWith("/") ? next : "/";
@@ -54,8 +57,8 @@ async function handleSubmit(event) {
 
     try {
         setSubmitting(true);
-        await login({ email, password });
-        window.location.href = redirectTarget();
+        const currentUser = await login({ email, password });
+        window.location.href = redirectTarget(currentUser);
     } catch (error) {
         if (error instanceof ApiError && error.status === 401) {
             showError("Correo o contraseña incorrectos.");

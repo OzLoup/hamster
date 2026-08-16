@@ -17,12 +17,14 @@ from app.services.exceptions import ConflictError, NotFoundError, ServiceError, 
 class OpenTabService:
     """Manages open tabs (tables, customer-on-credit accounts) that later become real sales."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
     def list_tabs(self) -> list[OpenTab]:
         stmt = (
             select(OpenTab)
+            .where(OpenTab.business_id == self.business_id)
             .options(selectinload(OpenTab.items).selectinload(OpenTabItem.product))
             .order_by(OpenTab.name)
         )
@@ -31,7 +33,7 @@ class OpenTabService:
     def get_tab(self, tab_id: int) -> OpenTab:
         stmt = (
             select(OpenTab)
-            .where(OpenTab.id == tab_id)
+            .where(OpenTab.id == tab_id, OpenTab.business_id == self.business_id)
             .options(selectinload(OpenTab.items).selectinload(OpenTabItem.product))
         )
         tab = self.db.scalar(stmt)
@@ -42,7 +44,7 @@ class OpenTabService:
     def create_tab(self, payload: OpenTabCreate) -> OpenTab:
         self._ensure_unique_name(payload.name)
 
-        tab = OpenTab(name=payload.name)
+        tab = OpenTab(name=payload.name, business_id=self.business_id)
         self.db.add(tab)
 
         try:
@@ -59,7 +61,7 @@ class OpenTabService:
     def add_item(self, tab_id: int, payload: OpenTabItemCreate) -> OpenTab:
         tab = self.get_tab(tab_id)
         product = self.db.get(Product, payload.product_id)
-        if product is None:
+        if product is None or product.business_id != self.business_id:
             raise NotFoundError(f"Product {payload.product_id} was not found.")
         if not product.is_active:
             raise ValidationError(f"Product {payload.product_id} is inactive and cannot be added to a tab.")
@@ -124,7 +126,12 @@ class OpenTabService:
         total = sum((item.subtotal for item in tab.items), Decimal("0.00"))
         reference = self._generate_sale_reference(tab)
 
-        sale = Sale(reference=reference, payment_method=payload.payment_method, total_amount=total)
+        sale = Sale(
+            business_id=self.business_id,
+            reference=reference,
+            payment_method=payload.payment_method,
+            total_amount=total,
+        )
         self.db.add(sale)
         self.db.flush()
 
@@ -170,7 +177,9 @@ class OpenTabService:
             raise ServiceError("Unexpected database error while deleting open tab.") from exc
 
     def _ensure_unique_name(self, name: str) -> None:
-        existing = self.db.scalar(select(OpenTab.id).where(OpenTab.name == name))
+        existing = self.db.scalar(
+            select(OpenTab.id).where(OpenTab.name == name, OpenTab.business_id == self.business_id)
+        )
         if existing is not None:
             raise ConflictError(f"Open tab name '{name}' already exists.")
 

@@ -10,12 +10,13 @@ from app.services.exceptions import ConflictError, NotFoundError, ServiceError
 class SupplierService:
     """Encapsulates supplier business operations and persistence concerns."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
     def list_suppliers(self, *, is_active: bool | None = None) -> list[Supplier]:
         """Return suppliers ordered by id, optionally filtered by active status."""
-        stmt = select(Supplier).order_by(Supplier.id)
+        stmt = select(Supplier).where(Supplier.business_id == self.business_id).order_by(Supplier.id)
         if is_active is not None:
             stmt = stmt.where(Supplier.is_active == is_active)
         return list(self.db.scalars(stmt).all())
@@ -23,15 +24,15 @@ class SupplierService:
     def get_supplier(self, supplier_id: int) -> Supplier:
         """Return a supplier or raise a not-found service error."""
         supplier = self.db.get(Supplier, supplier_id)
-        if supplier is None:
+        if supplier is None or supplier.business_id != self.business_id:
             raise NotFoundError(f"Supplier {supplier_id} was not found.")
         return supplier
 
     def create_supplier(self, payload: SupplierCreate) -> Supplier:
-        """Create a new supplier while enforcing a unique name."""
+        """Create a new supplier while enforcing a unique name within this business."""
         self._ensure_unique_name(payload.name)
 
-        supplier = Supplier(**payload.model_dump())
+        supplier = Supplier(**payload.model_dump(), business_id=self.business_id)
         self.db.add(supplier)
 
         try:
@@ -99,6 +100,8 @@ class SupplierService:
             raise ServiceError("Unexpected database error while deleting supplier.") from exc
 
     def _ensure_unique_name(self, name: str) -> None:
-        existing = self.db.scalar(select(Supplier.id).where(Supplier.name == name))
+        existing = self.db.scalar(
+            select(Supplier.id).where(Supplier.name == name, Supplier.business_id == self.business_id)
+        )
         if existing is not None:
             raise ConflictError(f"Supplier name '{name}' already exists.")

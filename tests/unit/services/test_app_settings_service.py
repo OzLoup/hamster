@@ -3,50 +3,44 @@ from unittest.mock import MagicMock
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.core.config import settings as app_config
-from app.models.app_settings import AppSettings
+from app.models.business import Business
 from app.schemas.app_settings import AppSettingsUpdate
 from app.services.app_settings_service import AppSettingsService
-from app.services.exceptions import ServiceError
+from app.services.exceptions import NotFoundError, ServiceError
 
 
 @pytest.fixture()
-def service(db_session):
-    return AppSettingsService(db_session)
+def service(db_session, business):
+    return AppSettingsService(db_session, business.id)
 
 
-def test_get_settings_creates_default_row_when_missing(service):
+def test_get_settings_returns_this_business(service, business):
     # Act
     settings_row = service.get_settings()
 
     # Assert
-    assert settings_row.id == 1
-    assert settings_row.business_name == app_config.app_name
+    assert settings_row.id == business.id
+    assert settings_row.name == business.name
 
 
-def test_get_settings_returns_existing_row_without_duplicating(service, db_session):
+def test_get_settings_missing_business_raises_not_found(db_session):
     # Arrange
-    first = service.get_settings()
+    service = AppSettingsService(db_session, business_id=999)
 
-    # Act
-    second = service.get_settings()
-
-    # Assert
-    assert second.id == first.id
-    count = db_session.query(AppSettings).count()
-    assert count == 1
+    # Act / Assert
+    with pytest.raises(NotFoundError, match="Business 999 was not found"):
+        service.get_settings()
 
 
 def test_update_settings_changes_business_name(service):
     # Arrange
-    service.get_settings()
     payload = AppSettingsUpdate(business_name="Ferretería El Tornillo")
 
     # Act
     updated = service.update_settings(payload)
 
     # Assert
-    assert updated.business_name == "Ferretería El Tornillo"
+    assert updated.name == "Ferretería El Tornillo"
 
 
 def test_update_settings_persists_across_reads(service):
@@ -57,32 +51,33 @@ def test_update_settings_persists_across_reads(service):
     reread = service.get_settings()
 
     # Assert
-    assert reread.business_name == "Panadería Central"
+    assert reread.name == "Panadería Central"
 
 
-def test_get_settings_sqlalchemy_error_raises_service_error_and_rolls_back():
+def test_update_settings_does_not_affect_other_businesses(service, db_session):
     # Arrange
-    db = MagicMock()
-    db.get.return_value = None
-    db.commit.side_effect = SQLAlchemyError("db down")
+    other = Business(name="Other Business")
+    db_session.add(other)
+    db_session.commit()
+    db_session.refresh(other)
+    other_service = AppSettingsService(db_session, other.id)
 
-    service = AppSettingsService(db)
+    # Act
+    service.update_settings(AppSettingsUpdate(business_name="Renamed"))
 
-    # Act / Assert
-    with pytest.raises(ServiceError, match="Unexpected database error while initializing settings"):
-        service.get_settings()
-    db.rollback.assert_called_once()
+    # Assert
+    assert other_service.get_settings().name == "Other Business"
 
 
 def test_update_settings_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
-    existing = AppSettings(id=1, business_name="Hamster")
+    existing = Business(id=1, name="Hamster")
 
     db = MagicMock()
     db.get.return_value = existing
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = AppSettingsService(db)
+    service = AppSettingsService(db, business_id=1)
     payload = AppSettingsUpdate(business_name="New Name")
 
     # Act / Assert

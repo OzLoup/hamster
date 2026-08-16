@@ -9,12 +9,12 @@ from app.models.product import Product
 from app.schemas.open_tab import OpenTabCloseRequest, OpenTabCreate, OpenTabItemCreate
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.open_tab_service import OpenTabService
-from tests.factories import create_category, create_product
+from tests.factories import create_business, create_category, create_product
 
 
 @pytest.fixture()
-def service(db_session):
-    return OpenTabService(db_session)
+def service(db_session, business):
+    return OpenTabService(db_session, business.id)
 
 
 def test_create_tab_success(service):
@@ -43,10 +43,10 @@ def test_get_tab_missing_raises_not_found(service):
         service.get_tab(999)
 
 
-def test_add_item_decrements_stock_and_creates_item(service, db_session):
+def test_add_item_decrements_stock_and_creates_item(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
 
     # Act
@@ -64,10 +64,10 @@ def test_add_item_decrements_stock_and_creates_item(service, db_session):
     assert refreshed_product.stock_quantity == 7
 
 
-def test_add_item_accumulates_existing_line(service, db_session):
+def test_add_item_accumulates_existing_line(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
     service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=2))
 
@@ -92,10 +92,35 @@ def test_add_item_missing_product_raises_not_found(service):
         service.add_item(tab.id, OpenTabItemCreate(product_id=999, quantity=1))
 
 
-def test_add_item_inactive_product_raises_validation_error(service, db_session):
+def test_add_item_rejects_product_from_another_business(service, db_session):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10)
+    tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
+    other_business = create_business(db_session, name="Other Business")
+    other_category = create_category(db_session, business_id=other_business.id)
+    other_product = create_product(db_session, business_id=other_business.id, category_id=other_category.id)
+
+    # Act / Assert
+    with pytest.raises(NotFoundError, match=f"Product {other_product.id} was not found"):
+        service.add_item(tab.id, OpenTabItemCreate(product_id=other_product.id, quantity=1))
+
+
+def test_create_tab_same_name_allowed_across_different_businesses(service, db_session):
+    # Arrange
+    other_business = create_business(db_session, name="Other Business")
+    other_service = OpenTabService(db_session, other_business.id)
+    service.create_tab(OpenTabCreate(name="Mesa 1"))
+
+    # Act
+    created = other_service.create_tab(OpenTabCreate(name="Mesa 1"))
+
+    # Assert
+    assert created.id is not None
+
+
+def test_add_item_inactive_product_raises_validation_error(service, db_session, business):
+    # Arrange
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10)
     product.is_active = False
     db_session.commit()
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
@@ -105,10 +130,10 @@ def test_add_item_inactive_product_raises_validation_error(service, db_session):
         service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=1))
 
 
-def test_add_item_insufficient_stock_raises_validation_error(service, db_session):
+def test_add_item_insufficient_stock_raises_validation_error(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=2)
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=2)
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
 
     # Act / Assert
@@ -116,10 +141,10 @@ def test_add_item_insufficient_stock_raises_validation_error(service, db_session
         service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=5))
 
 
-def test_remove_item_restores_stock(service, db_session):
+def test_remove_item_restores_stock(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10)
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10)
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
     added = service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=4))
     item_id = added.items[0].id
@@ -142,10 +167,10 @@ def test_remove_item_missing_raises_not_found(service):
         service.remove_item(tab.id, 999)
 
 
-def test_close_tab_creates_sale_and_empties_items(service, db_session):
+def test_close_tab_creates_sale_and_empties_items(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10, sale_price=Decimal("5.00"))
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
     service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=3))
 
@@ -175,10 +200,10 @@ def test_close_tab_with_no_items_raises_validation_error(service):
         service.close_tab(tab.id, OpenTabCloseRequest(payment_method="cash"))
 
 
-def test_delete_tab_with_items_restores_stock(service, db_session):
+def test_delete_tab_with_items_restores_stock(service, db_session, business):
     # Arrange
-    category = create_category(db_session)
-    product = create_product(db_session, category_id=category.id, stock_quantity=10)
+    category = create_category(db_session, business_id=business.id)
+    product = create_product(db_session, business_id=business.id, category_id=category.id, stock_quantity=10)
     tab = service.create_tab(OpenTabCreate(name="Mesa 1"))
     service.add_item(tab.id, OpenTabItemCreate(product_id=product.id, quantity=4))
 
@@ -204,7 +229,7 @@ def test_create_tab_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.scalar.return_value = None
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = OpenTabService(db)
+    service = OpenTabService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while creating open tab"):
@@ -214,9 +239,10 @@ def test_create_tab_sqlalchemy_error_raises_service_error_and_rolls_back():
 
 def test_add_item_sqlalchemy_error_raises_service_error_and_rolls_back():
     # Arrange
-    tab = OpenTab(id=1, name="Mesa 1")
+    tab = OpenTab(id=1, business_id=1, name="Mesa 1")
     product = Product(
         id=1,
+        business_id=1,
         category_id=1,
         name="Producto",
         sku="PRD-000001",
@@ -235,7 +261,7 @@ def test_add_item_sqlalchemy_error_raises_service_error_and_rolls_back():
     db.get.return_value = product
     db.commit.side_effect = SQLAlchemyError("db down")
 
-    service = OpenTabService(db)
+    service = OpenTabService(db, business_id=1)
 
     # Act / Assert
     with pytest.raises(ServiceError, match="Unexpected database error while adding item to open tab"):

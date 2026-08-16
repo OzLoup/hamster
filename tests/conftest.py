@@ -13,8 +13,10 @@ from app import models  # noqa: F401
 from app.core.dependencies import get_db
 from app.database.database import Base
 from app.main import app as main_app
+from app.models.business import Business
 from app.models.category import Category
 from app.models.product import Product
+from tests.factories import create_business, create_user
 
 
 @pytest.fixture(scope="session")
@@ -100,6 +102,30 @@ async def async_client(app: FastAPI) -> Generator[AsyncClient, None, None]:
 
 
 @pytest.fixture()
+def business(db_session: Session) -> Business:
+    """Create and persist a tenant that API-level tests operate within."""
+    return create_business(db_session, name="Test Business")
+
+
+@pytest.fixture()
+def authenticated_client(client: TestClient, db_session: Session, business: Business) -> TestClient:
+    """A TestClient logged in as an admin of `business`; every request carries its session cookie."""
+    create_user(
+        db_session,
+        email="admin@test-business.com",
+        password="Password123",
+        full_name="Test Admin",
+        role="admin",
+        business_id=business.id,
+    )
+    response = client.post(
+        "/api/v1/auth/login", json={"email": "admin@test-business.com", "password": "Password123"}
+    )
+    assert response.status_code == 200
+    return client
+
+
+@pytest.fixture()
 def category_payload() -> dict:
     """Return a baseline category payload for API and service tests."""
     return {
@@ -153,9 +179,9 @@ def sale_payload_factory():
 
 
 @pytest.fixture()
-def sample_category(db_session: Session, category_payload: dict) -> Category:
+def sample_category(db_session: Session, category_payload: dict, business: Business) -> Category:
     """Create and persist a reusable category entity."""
-    category = Category(**category_payload)
+    category = Category(**category_payload, business_id=business.id)
     db_session.add(category)
     db_session.commit()
     db_session.refresh(category)
@@ -163,9 +189,10 @@ def sample_category(db_session: Session, category_payload: dict) -> Category:
 
 
 @pytest.fixture()
-def sample_product(db_session: Session, sample_category: Category) -> Product:
+def sample_product(db_session: Session, sample_category: Category, business: Business) -> Product:
     """Create and persist a reusable product entity linked to sample_category."""
     product = Product(
+        business_id=business.id,
         category_id=sample_category.id,
         name="Mechanical Keyboard",
         sku="KB-100",

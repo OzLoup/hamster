@@ -1,38 +1,27 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings as app_config
-from app.models.app_settings import AppSettings
+from app.models.business import Business
 from app.schemas.app_settings import AppSettingsUpdate
-from app.services.exceptions import ServiceError
-
-SETTINGS_ROW_ID = 1
+from app.services.exceptions import NotFoundError, ServiceError
 
 
 class AppSettingsService:
-    """Reads and updates the singleton row of tenant-wide settings."""
+    """Reads and updates the calling business's own display name (backed by Business.name)."""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, business_id: int):
         self.db = db
+        self.business_id = business_id
 
-    def get_settings(self) -> AppSettings:
-        settings_row = self.db.get(AppSettings, SETTINGS_ROW_ID)
-        if settings_row is not None:
-            return settings_row
+    def get_settings(self) -> Business:
+        business = self.db.get(Business, self.business_id)
+        if business is None:
+            raise NotFoundError(f"Business {self.business_id} was not found.")
+        return business
 
-        settings_row = AppSettings(id=SETTINGS_ROW_ID, business_name=app_config.app_name)
-        self.db.add(settings_row)
-        try:
-            self.db.commit()
-        except SQLAlchemyError as exc:
-            self.db.rollback()
-            raise ServiceError("Unexpected database error while initializing settings.") from exc
-        self.db.refresh(settings_row)
-        return settings_row
-
-    def update_settings(self, payload: AppSettingsUpdate) -> AppSettings:
-        settings_row = self.get_settings()
-        settings_row.business_name = payload.business_name
+    def update_settings(self, payload: AppSettingsUpdate) -> Business:
+        business = self.get_settings()
+        business.name = payload.business_name
 
         try:
             self.db.commit()
@@ -40,5 +29,5 @@ class AppSettingsService:
             self.db.rollback()
             raise ServiceError("Unexpected database error while updating settings.") from exc
 
-        self.db.refresh(settings_row)
-        return settings_row
+        self.db.refresh(business)
+        return business

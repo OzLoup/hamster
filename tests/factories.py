@@ -52,10 +52,11 @@ def create_user(
 def create_category(
     db_session: Session,
     *,
+    business_id: int,
     name: str = "Electronics",
     description: str | None = None,
 ) -> Category:
-    category = Category(name=name, description=description)
+    category = Category(name=name, description=description, business_id=business_id)
     db_session.add(category)
     db_session.commit()
     db_session.refresh(category)
@@ -65,6 +66,7 @@ def create_category(
 def create_product(
     db_session: Session,
     *,
+    business_id: int,
     category_id: int,
     name: str = "Mechanical Keyboard",
     sku: str = "PRD-001",
@@ -73,6 +75,7 @@ def create_product(
     sale_price: Decimal = Decimal("79.99"),
 ) -> Product:
     product = Product(
+        business_id=business_id,
         category_id=category_id,
         name=name,
         sku=sku,
@@ -89,12 +92,13 @@ def create_product(
 def create_supplier(
     db_session: Session,
     *,
+    business_id: int,
     name: str = "Acme Supplies",
     contact_name: str | None = None,
     phone: str | None = None,
     email: str | None = None,
 ) -> Supplier:
-    supplier = Supplier(name=name, contact_name=contact_name, phone=phone, email=email)
+    supplier = Supplier(name=name, contact_name=contact_name, phone=phone, email=email, business_id=business_id)
     db_session.add(supplier)
     db_session.commit()
     db_session.refresh(supplier)
