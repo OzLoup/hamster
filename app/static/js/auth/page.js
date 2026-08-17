@@ -57,6 +57,10 @@ async function handleSubmit(event) {
         showError("Ingresa tu correo y contraseña.");
         return;
     }
+    if (password.length < 8) {
+        showError("La contraseña debe tener al menos 8 caracteres.");
+        return;
+    }
 
     try {
         setSubmitting(true);

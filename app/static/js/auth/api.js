@@ -8,13 +8,25 @@ export class ApiError extends Error {
     }
 }
 
+function messageFromDetail(detail) {
+    if (Array.isArray(detail)) {
+        // FastAPI/Pydantic validation messages are always in English; show a
+        // generic Spanish message instead of surfacing them untranslated.
+        return "Revisa que el correo y la contraseña tengan un formato válido.";
+    }
+    if (typeof detail === "string" && detail.trim()) {
+        return detail;
+    }
+    return "No se pudo iniciar sesión.";
+}
+
 async function assertOk(response) {
     if (response.ok) {
         return;
     }
     try {
         const payload = await response.json();
-        throw new ApiError(payload.detail || "Request failed", response.status);
+        throw new ApiError(messageFromDetail(payload.detail), response.status);
     } catch (error) {
         if (error instanceof ApiError) {
             throw error;
