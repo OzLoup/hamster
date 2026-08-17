@@ -1,0 +1,250 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Administración | {{ app_name }}{% endblock %}
+
+{% block content %}
+<section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
+    <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Gestión de la plataforma</p>
+    <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Negocios y superusuarios</h2>
+    <p class="mt-2 max-w-2xl text-sm text-slate-300">
+        Desde aquí das de alta un negocio nuevo (con su primer Administrador) cuando le vendes la plataforma a un cliente,
+        y gestionas quién más tiene acceso de superusuario.
+    </p>
+</section>
+
+<section class="saas-card mb-6 rounded-3xl p-4 shadow-soft sm:p-6">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h3 class="text-base font-semibold text-slate-100">Negocios</h3>
+            <p class="mt-1 text-xs text-slate-400">Cada uno es un cliente independiente; sus datos nunca se mezclan entre sí.</p>
+        </div>
+        <button id="open-business-modal" type="button" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
+            </svg>
+            Nuevo negocio
+        </button>
+    </div>
+
+    <div id="businesses-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <div class="saas-table-wrap overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
+                    <th class="px-3 py-3 font-medium">Negocio</th>
+                    <th class="px-3 py-3 font-medium">Creado</th>
+                    <th class="px-3 py-3 font-medium">Estado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="businesses-table-body" class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                    <td colspan="4" class="px-3 py-10">
+                        <div class="saas-empty animate-pulseSoft">Cargando negocios...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="saas-card rounded-3xl p-4 shadow-soft sm:p-6">
+    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h3 class="text-base font-semibold text-slate-100">Superusuarios</h3>
+            <p class="mt-1 text-xs text-slate-400">Tienen acceso a este panel, pero no pertenecen a ningún negocio.</p>
+        </div>
+        <button id="open-superuser-modal" type="button" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
+            </svg>
+            Nuevo superusuario
+        </button>
+    </div>
+
+    <div id="superusers-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <div class="saas-table-wrap overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
+                    <th class="px-3 py-3 font-medium">Nombre</th>
+                    <th class="px-3 py-3 font-medium">Correo</th>
+                    <th class="px-3 py-3 font-medium">Estado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="superusers-table-body" class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                    <td colspan="4" class="px-3 py-10">
+                        <div class="saas-empty animate-pulseSoft">Cargando superusuarios...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<!-- New business modal -->
+<div
+    id="business-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="business-modal-panel"
+        class="w-full max-w-xl scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="business-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="business-modal-title" class="text-lg font-semibold text-white">Nuevo negocio</h3>
+                <p class="text-xs text-slate-400">Crea el negocio y su primer Administrador en un solo paso.</p>
+            </div>
+            <button
+                id="close-business-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="business-form" class="space-y-4 px-5 py-5 sm:px-6" novalidate>
+            <div id="business-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="business-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre del negocio</label>
+                <input id="business-name" name="business_name" type="text" class="business-field saas-input" placeholder="Papelería El Trébol" />
+            </div>
+
+            <div class="border-t border-slate-800 pt-4">
+                <p class="mb-3 text-xs font-medium uppercase tracking-wider text-slate-400">Primer Administrador</p>
+                <div class="space-y-4">
+                    <div>
+                        <label for="business-admin-full-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre completo</label>
+                        <input id="business-admin-full-name" name="admin_full_name" type="text" class="business-field saas-input" placeholder="Juan Pérez" />
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="business-admin-email" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Correo electrónico</label>
+                            <input id="business-admin-email" name="admin_email" type="email" class="business-field saas-input" placeholder="juan@negocio.com" />
+                        </div>
+                        <div>
+                            <label for="business-admin-password" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Contraseña</label>
+                            <input id="business-admin-password" name="admin_password" type="password" class="business-field saas-input" placeholder="Mínimo 8 caracteres" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+                <button id="cancel-business-modal" type="button" class="saas-btn saas-btn-muted px-4 py-2.5 text-sm">Cancelar</button>
+                <button id="submit-business" type="submit" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+                    <svg id="business-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                    </svg>
+                    <span id="business-submit-label">Crear negocio</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm business status change -->
+<div
+    id="business-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="business-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 id="business-confirm-title" class="text-lg font-semibold text-white">Desactivar negocio</h3>
+        <p id="business-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-business-confirm" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-business-action" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Desactivar</button>
+        </div>
+    </div>
+</div>
+
+<!-- New superuser modal -->
+<div
+    id="superuser-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="superuser-modal-panel"
+        class="w-full max-w-lg scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="superuser-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="superuser-modal-title" class="text-lg font-semibold text-white">Nuevo superusuario</h3>
+                <p class="text-xs text-slate-400">Tendrá el mismo acceso a este panel que tú.</p>
+            </div>
+            <button
+                id="close-superuser-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="superuser-form" class="space-y-4 px-5 py-5 sm:px-6" novalidate>
+            <div id="superuser-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="superuser-full-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre completo</label>
+                <input id="superuser-full-name" name="full_name" type="text" class="superuser-field saas-input" placeholder="María Restrepo" />
+            </div>
+            <div>
+                <label for="superuser-email" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Correo electrónico</label>
+                <input id="superuser-email" name="email" type="email" class="superuser-field saas-input" placeholder="maria@hamster.com" />
+            </div>
+            <div>
+                <label for="superuser-password" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Contraseña</label>
+                <input id="superuser-password" name="password" type="password" class="superuser-field saas-input" placeholder="Mínimo 8 caracteres" />
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+                <button id="cancel-superuser-modal" type="button" class="saas-btn saas-btn-muted px-4 py-2.5 text-sm">Cancelar</button>
+                <button id="submit-superuser" type="submit" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+                    <svg id="superuser-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                    </svg>
+                    <span id="superuser-submit-label">Crear superusuario</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Confirm superuser status change -->
+<div
+    id="superuser-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="superuser-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 id="superuser-confirm-title" class="text-lg font-semibold text-white">Desactivar superusuario</h3>
+        <p id="superuser-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-superuser-confirm" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-superuser-action" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Desactivar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/admin/page.js') }}"></script>
+{% endblock %}

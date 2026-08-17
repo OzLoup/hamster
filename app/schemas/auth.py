@@ -10,7 +10,7 @@ class UserLogin(BaseModel):
 
 class CurrentUser(BaseModel):
     id: int
-    email: EmailStr
+    email: str
     full_name: str
     role: UserRole | None
     is_superuser: bool

@@ -114,6 +114,33 @@ def test_me_returns_current_user_with_valid_session(client, db_session):
     assert response.json()["email"] == "admin@acme.com"
 
 
+def test_login_returns_401_for_deactivated_business(client, db_session):
+    # Arrange
+    business = create_business(db_session, name="Acme", is_active=False)
+    create_user(db_session, email="admin@acme.com", password="Password123", business_id=business.id)
+
+    # Act
+    response = client.post(f"{BASE_URL}/login", json={"email": "admin@acme.com", "password": "Password123"})
+
+    # Assert
+    assert response.status_code == 401
+
+
+def test_deactivating_business_locks_out_already_logged_in_user(client, db_session):
+    # Arrange
+    business = create_business(db_session, name="Acme")
+    create_user(db_session, email="admin@acme.com", password="Password123", business_id=business.id)
+    client.post(f"{BASE_URL}/login", json={"email": "admin@acme.com", "password": "Password123"})
+    assert client.get(f"{BASE_URL}/me").status_code == 200
+
+    # Act
+    business.is_active = False
+    db_session.commit()
+
+    # Assert
+    assert client.get(f"{BASE_URL}/me").status_code == 401
+
+
 def test_logout_clears_session_so_me_requires_login_again(client, db_session):
     # Arrange
     create_user(db_session, email="admin@acme.com", password="Password123")

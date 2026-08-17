@@ -5,12 +5,14 @@ from app.core.dependencies import get_current_business_id, get_current_user, get
 from app.models.user import User
 from app.services.app_settings_service import AppSettingsService
 from app.services.auth_service import AuthService
+from app.services.business_admin_service import BusinessAdminService
 from app.services.category_service import CategoryService
 from app.services.dashboard_service import DashboardService
 from app.services.open_tab_service import OpenTabService
 from app.services.product_service import ProductService
 from app.services.purchase_service import PurchaseService
 from app.services.sale_service import SaleService
+from app.services.superuser_service import SuperuserService
 from app.services.supplier_service import SupplierService
 from app.services.user_service import UserService
 
@@ -83,3 +85,15 @@ def get_user_service(
 ) -> UserService:
     """Dependency provider for user service."""
     return UserService(db, business_id, current_user.id, current_user.role)
+
+
+def get_business_admin_service(db: Session = Depends(get_db)) -> BusinessAdminService:
+    """Dependency provider for the superuser-only business admin service."""
+    return BusinessAdminService(db)
+
+
+def get_superuser_service(
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+) -> SuperuserService:
+    """Dependency provider for the superuser management service."""
+    return SuperuserService(db, current_user.id)

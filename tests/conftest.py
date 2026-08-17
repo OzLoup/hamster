@@ -164,6 +164,26 @@ def seller_client(app: FastAPI, db_session: Session, business: Business) -> Gene
 
 
 @pytest.fixture()
+def superuser_client(app: FastAPI, db_session: Session) -> Generator[TestClient, None, None]:
+    """A separate TestClient (own cookie jar) logged in as a platform superuser (no business)."""
+    create_user(
+        db_session,
+        email="superuser@hamster.com",
+        password="Password123",
+        full_name="Test Superuser",
+        role=None,
+        business_id=None,
+        is_superuser=True,
+    )
+    with TestClient(app) as test_client:
+        response = test_client.post(
+            "/api/v1/auth/login", json={"email": "superuser@hamster.com", "password": "Password123"}
+        )
+        assert response.status_code == 200
+        yield test_client
+
+
+@pytest.fixture()
 def category_payload() -> dict:
     """Return a baseline category payload for API and service tests."""
     return {

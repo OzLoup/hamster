@@ -18,4 +18,6 @@ class AuthService:
             raise AuthenticationError("Invalid email or password.")
         if not user.is_active:
             raise AuthenticationError("This account has been deactivated.")
+        if user.business_id is not None and not user.business.is_active:
+            raise AuthenticationError("This business has been deactivated.")
         return user

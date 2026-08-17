@@ -9,7 +9,12 @@ from sqlalchemy.orm import Session
 import uvicorn
 
 from app.core.config import settings
-from app.core.dependencies import get_db, require_business_web_user, require_web_role, require_web_user
+from app.core.dependencies import (
+    get_db,
+    require_business_web_user,
+    require_web_role,
+    require_web_superuser,
+)
 from app.database.seed import seed_database_if_empty
 from app.models.user import User
 from app.routers.router import api_router
@@ -68,11 +73,11 @@ def login_page(request: Request) -> HTMLResponse:
 
 
 @app.get("/admin", response_class=HTMLResponse)
-def admin_placeholder_page(
-    request: Request, current_user: User = Depends(require_web_user)
+def admin_page(
+    request: Request, current_user: User = Depends(require_web_superuser)
 ) -> HTMLResponse:
     return templates.TemplateResponse(
-        "pages/admin_placeholder.html",
+        "pages/admin.html",
         {"request": request, "app_name": settings.app_name, "current_user": current_user},
     )
 

@@ -17,6 +17,8 @@ def _resolve_user_from_cookie(request: Request, db: Session) -> User | None:
     user = db.get(User, user_id)
     if user is None or not user.is_active:
         return None
+    if user.business_id is not None and not user.business.is_active:
+        return None
     return user
 
 
@@ -81,6 +83,20 @@ def require_web_role(*allowed_roles: str, redirect: str = "/sales"):
     return _dependency
 
 
+def require_superuser(current_user: User = Depends(get_current_user)) -> User:
+    """For JSON API routes: 403 unless the caller is a platform superuser."""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Superuser access required.")
+    return current_user
+
+
+def require_web_superuser(current_user: User = Depends(require_web_user)) -> User:
+    """For HTML page routes: sends non-superusers back to / instead of returning a raw 403."""
+    if not current_user.is_superuser:
+        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/"})
+    return current_user
+
+
 __all__ = [
     "get_db",
     "get_current_user",
@@ -89,4 +105,6 @@ __all__ = [
     "require_business_web_user",
     "require_role",
     "require_web_role",
+    "require_superuser",
+    "require_web_superuser",
 ]

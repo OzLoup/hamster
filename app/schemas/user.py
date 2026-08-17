@@ -24,7 +24,7 @@ class UserUpdate(BaseModel):
 class UserRead(TimestampedResponse):
     id: int
     business_id: int | None
-    email: EmailStr
+    email: str
     full_name: str
     role: UserRole | None
     is_superuser: bool

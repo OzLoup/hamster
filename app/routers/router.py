@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.routers.app_settings import router as app_settings_router
 from app.routers.auth import router as auth_router
+from app.routers.business_admin import router as business_admin_router
 from app.routers.categories import router as categories_router
 from app.routers.dashboard import router as dashboard_router
 from app.routers.health import router as health_router
@@ -9,6 +10,7 @@ from app.routers.open_tabs import router as open_tabs_router
 from app.routers.products import router as products_router
 from app.routers.purchases import router as purchases_router
 from app.routers.sales import router as sales_router
+from app.routers.superusers import router as superusers_router
 from app.routers.suppliers import router as suppliers_router
 from app.routers.users import router as users_router
 
@@ -24,3 +26,5 @@ api_router.include_router(app_settings_router)
 api_router.include_router(auth_router)
 api_router.include_router(open_tabs_router)
 api_router.include_router(users_router)
+api_router.include_router(business_admin_router)
+api_router.include_router(superusers_router)
