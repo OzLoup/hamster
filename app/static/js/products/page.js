@@ -332,5 +332,9 @@ function wireEvents() {
     modal.onConfirmDelete(confirmDelete);
 }
 
+if (window.currentUser?.role === "seller") {
+    document.body.classList.add("role-readonly");
+}
+
 wireEvents();
 loadCategories().then(loadProducts);

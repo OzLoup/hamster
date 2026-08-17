@@ -24,6 +24,13 @@
 
     <div id="toast-container" class="pointer-events-none fixed right-4 top-4 z-[100] flex w-full max-w-sm flex-col gap-3" aria-live="polite" aria-atomic="true"></div>
 
+    <script>
+        window.currentUser = {
+            id: {{ current_user.id|tojson }},
+            role: {{ current_user.role|tojson }},
+            isSuperuser: {{ current_user.is_superuser|tojson }}
+        };
+    </script>
     <script src="{{ url_for('static', path='/js/main.js') }}"></script>
     <script src="{{ url_for('static', path='/js/toast.js') }}"></script>
     {% block scripts %}{% endblock %}

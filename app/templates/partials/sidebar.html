@@ -26,6 +26,7 @@
     </div>
 
     <nav class="space-y-1.5 px-2 text-sm" aria-label="Navegación principal">
+        {% if current_user.role in ['admin', 'coordinator'] %}
         <a
             href="/"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path == '/' %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -36,6 +37,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Panel</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path == '/' %}bg-brand-500/25 text-brand-200{% endif %}">Inicio</span>
         </a>
+        {% endif %}
         <a
             href="/products"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/products') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -46,6 +48,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Productos</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/products') %}bg-brand-500/25 text-brand-200{% endif %}">Catálogo</span>
         </a>
+        {% if current_user.role in ['admin', 'coordinator'] %}
         <a
             href="/categories"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/categories') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -56,6 +59,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Categorías</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/categories') %}bg-brand-500/25 text-brand-200{% endif %}">Grupos</span>
         </a>
+        {% endif %}
         <a
             href="/sales"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/sales') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -76,6 +80,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Cuentas abiertas</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/open-tabs') %}bg-brand-500/25 text-brand-200{% endif %}">Mesas</span>
         </a>
+        {% if current_user.role in ['admin', 'coordinator'] %}
         <a
             href="/purchases"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/purchases') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -96,6 +101,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Proveedores</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/suppliers') %}bg-brand-500/25 text-brand-200{% endif %}">Contactos</span>
         </a>
+        {% endif %}
         <a
             href="/reports"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/reports') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -106,6 +112,19 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Reportes</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/reports') %}bg-brand-500/25 text-brand-200{% endif %}">Análisis</span>
         </a>
+        {% if current_user.role in ['admin', 'coordinator'] %}
+        <a
+            href="/users"
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/users') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
+        >
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.5a3 3 0 0 0-3-3H6.75a3 3 0 0 0-3 3M15.75 9.75a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM20.25 19.5a2.625 2.625 0 0 0-2.625-2.625H17.1M18 10.5a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"/>
+            </svg>
+            <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Usuarios</span>
+            <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/users') %}bg-brand-500/25 text-brand-200{% endif %}">Equipo</span>
+        </a>
+        {% endif %}
+        {% if current_user.role == 'admin' %}
         <a
             href="/settings"
             class="group flex items-center gap-3 rounded-xl px-3 py-2.5 transition-all duration-200 {% if current_path.startswith('/settings') %}bg-brand-600/20 text-brand-200 ring-1 ring-brand-500/40{% else %}text-slate-300 hover:bg-slate-800/70 hover:text-white{% endif %}"
@@ -117,6 +136,7 @@
             <span class="sidebar-text max-w-[160px] truncate transition-all duration-300 md:translate-x-0 md:opacity-100">Configuración</span>
             <span class="sidebar-pill ml-auto rounded-md bg-slate-800 px-2 py-0.5 text-[10px] uppercase tracking-wide text-slate-400 transition-all duration-300 {% if current_path.startswith('/settings') %}bg-brand-500/25 text-brand-200{% endif %}">Administración</span>
         </a>
+        {% endif %}
     </nav>
 
     <div class="sidebar-panel mt-8 rounded-2xl border border-slate-800/90 bg-gradient-to-br from-slate-900/95 to-slate-950 p-4 transition-all duration-300 md:max-h-40 md:opacity-100">

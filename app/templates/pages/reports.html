@@ -8,7 +8,13 @@
         <div>
             <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Inteligencia de negocios</p>
             <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Reportes</h2>
+            {% if current_user.role == 'admin' %}
             <p class="mt-2 text-sm text-slate-300">Sigue el rendimiento de productos, tendencias de ventas y control de tus compras (egresos).</p>
+            {% elif current_user.role == 'coordinator' %}
+            <p class="mt-2 text-sm text-slate-300">Consulta las ventas del negocio, el inventario y lo pagado a proveedores.</p>
+            {% else %}
+            <p class="mt-2 text-sm text-slate-300">Consulta las ventas del período y su desglose por método de pago para hacer tu cuadre de caja.</p>
+            {% endif %}
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <button
@@ -35,6 +41,11 @@
                 </svg>
                 Exportar PDF
             </button>
+            {% if current_user.role != 'admin' %}
+            <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-200">
+                Vista {{ "Coordinador" if current_user.role == "coordinator" else "Vendedor" }}
+            </span>
+            {% endif %}
             <span class="inline-flex w-fit items-center gap-2 rounded-xl border border-brand-500/40 bg-brand-500/10 px-3 py-2 text-xs font-medium text-brand-200">
                 <span class="h-2 w-2 animate-pulse rounded-full bg-brand-300"></span>
                 Vista de análisis en vivo
@@ -81,17 +92,37 @@
         <p class="text-xs uppercase tracking-wide text-slate-400">Total ventas</p>
         <p class="mt-2 text-2xl font-semibold text-emerald-300" id="reports-stat-sales">$ 0</p>
     </article>
+    {% if current_user.role in ['admin', 'coordinator'] %}
     <article class="saas-card rounded-2xl p-5">
         <p class="text-xs uppercase tracking-wide text-slate-400">Total compras (egresos)</p>
         <p class="mt-2 text-2xl font-semibold text-rose-300" id="reports-stat-purchases">$ 0</p>
     </article>
+    {% endif %}
+    {% if current_user.role == 'admin' %}
     <article class="saas-card rounded-2xl p-5">
         <p class="text-xs uppercase tracking-wide text-slate-400">Balance</p>
         <p class="mt-2 text-2xl font-semibold text-slate-100" id="reports-stat-balance">$ 0</p>
     </article>
+    {% endif %}
+</section>
+
+<section class="saas-card mb-6 rounded-3xl p-5 sm:p-6">
+    <div class="mb-4 flex items-center justify-between">
+        <div>
+            <h3 class="text-base font-semibold text-slate-100">Ventas por método de pago</h3>
+            <p class="mt-1 text-xs text-slate-400">Útil para cuadrar caja: compara estos totales contra lo que tienes físicamente.</p>
+        </div>
+        <span class="rounded-lg bg-cyan-500/15 px-2.5 py-1 text-xs text-cyan-200">Cuadre de caja</span>
+    </div>
+    <div id="reports-payment-breakdown-loading" class="space-y-2 animate-pulseSoft" aria-hidden="true">
+        <div class="h-10 rounded-xl bg-slate-800/70"></div>
+        <div class="h-10 rounded-xl bg-slate-800/70"></div>
+    </div>
+    <div id="reports-payment-breakdown-wrap" class="hidden overflow-x-auto"></div>
 </section>
 
 <section class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    {% if current_user.role == 'admin' %}
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Productos más vendidos</h3>
@@ -108,7 +139,9 @@
         </div>
         <div id="reports-top-products-list" class="hidden space-y-2"></div>
     </article>
+    {% endif %}
 
+    {% if current_user.role in ['admin', 'coordinator'] %}
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Productos con bajo stock</h3>
@@ -124,7 +157,9 @@
         </div>
         <div id="reports-low-stock-list" class="hidden space-y-2"></div>
     </article>
+    {% endif %}
 
+    {% if current_user.role == 'admin' %}
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Ventas diarias</h3>
@@ -146,7 +181,9 @@
             <canvas id="reports-monthly-chart"></canvas>
         </div>
     </article>
+    {% endif %}
 
+    {% if current_user.role in ['admin', 'coordinator'] %}
     <article class="saas-card rounded-3xl p-5 sm:p-6">
         <div class="mb-4 flex items-center justify-between">
             <h3 class="text-base font-semibold text-slate-100">Compras por proveedor</h3>
@@ -173,6 +210,7 @@
             <canvas id="reports-purchases-chart"></canvas>
         </div>
     </article>
+    {% endif %}
 </section>
 
     <div id="reports-error" class="mt-6 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>

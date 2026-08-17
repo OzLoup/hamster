@@ -2,11 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
+from app.core.dependencies import require_role
 from app.schemas.dashboard import DashboardSummary, LowStockProduct
 from app.services.dashboard_service import DashboardService
 from app.services.dependencies import get_dashboard_service
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter(
+    prefix="/dashboard", tags=["dashboard"], dependencies=[Depends(require_role("admin", "coordinator"))]
+)
 
 TimezoneParam = Annotated[
     str | None, Query(max_length=64, description="IANA timezone name, e.g. America/Bogota")

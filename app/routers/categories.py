@@ -2,12 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Response, status
 
+from app.core.dependencies import require_role
 from app.schemas.category import CategoryCreate, CategoryRead, CategoryUpdate
 from app.services.category_service import CategoryService
 from app.services.dependencies import get_category_service
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 
 router = APIRouter(prefix="/categories", tags=["categories"])
+WriteAccess = Depends(require_role("admin", "coordinator"))
 
 CategoryId = Annotated[int, Path(ge=1, description="Category identifier")]
 
@@ -53,6 +55,7 @@ def get_category(category_id: CategoryId, service: CategoryService = Depends(get
     response_model=CategoryRead,
     status_code=status.HTTP_201_CREATED,
     summary="Create category",
+    dependencies=[WriteAccess],
 )
 def create_category(
     payload: CategoryCreate, service: CategoryService = Depends(get_category_service)
@@ -68,6 +71,7 @@ def create_category(
     response_model=CategoryRead,
     status_code=status.HTTP_200_OK,
     summary="Replace category",
+    dependencies=[WriteAccess],
 )
 def update_category(
     category_id: CategoryId,
@@ -85,6 +89,7 @@ def update_category(
     "/{category_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Delete category",
+    dependencies=[WriteAccess],
 )
 def delete_category(
     category_id: CategoryId, service: CategoryService = Depends(get_category_service)

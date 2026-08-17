@@ -56,10 +56,37 @@ def require_business_web_user(current_user: User = Depends(require_web_user)) ->
     return current_user
 
 
+def require_role(*allowed_roles: str):
+    """For JSON API routes: 403 if the caller's role isn't one of allowed_roles."""
+
+    def _dependency(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to perform this action.",
+            )
+        return current_user
+
+    return _dependency
+
+
+def require_web_role(*allowed_roles: str, redirect: str = "/sales"):
+    """For HTML page routes: redirects to `redirect` instead of returning a raw 403."""
+
+    def _dependency(current_user: User = Depends(require_business_web_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": redirect})
+        return current_user
+
+    return _dependency
+
+
 __all__ = [
     "get_db",
     "get_current_user",
     "get_current_business_id",
     "require_web_user",
     "require_business_web_user",
+    "require_role",
+    "require_web_role",
 ]

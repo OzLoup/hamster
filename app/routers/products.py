@@ -3,12 +3,14 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 
+from app.core.dependencies import require_role
 from app.schemas.product import ProductCreate, ProductListResponse, ProductRead, ProductUpdate
 from app.services.dependencies import get_product_service
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["products"])
+WriteAccess = Depends(require_role("admin", "coordinator"))
 
 ProductId = Annotated[int, Path(ge=1, description="Product identifier")]
 Page = Annotated[int, Query(ge=1, description="Page number starting at 1")]
@@ -83,7 +85,7 @@ def get_product(
         _raise_http_from_service_error(exc)
 
 
-@router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED, dependencies=[WriteAccess])
 def create_product(
     payload: ProductCreate,
     service: ProductService = Depends(get_product_service),
@@ -94,7 +96,7 @@ def create_product(
         _raise_http_from_service_error(exc)
 
 
-@router.put("/{product_id}", response_model=ProductRead, status_code=status.HTTP_200_OK)
+@router.put("/{product_id}", response_model=ProductRead, status_code=status.HTTP_200_OK, dependencies=[WriteAccess])
 def update_product(
     product_id: ProductId,
     payload: ProductCreate,
@@ -107,7 +109,9 @@ def update_product(
         _raise_http_from_service_error(exc)
 
 
-@router.post("/{product_id}/deactivate", response_model=ProductRead, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{product_id}/deactivate", response_model=ProductRead, status_code=status.HTTP_200_OK, dependencies=[WriteAccess]
+)
 def deactivate_product(
     product_id: ProductId,
     service: ProductService = Depends(get_product_service),
@@ -118,7 +122,9 @@ def deactivate_product(
         _raise_http_from_service_error(exc)
 
 
-@router.post("/{product_id}/activate", response_model=ProductRead, status_code=status.HTTP_200_OK)
+@router.post(
+    "/{product_id}/activate", response_model=ProductRead, status_code=status.HTTP_200_OK, dependencies=[WriteAccess]
+)
 def activate_product(
     product_id: ProductId,
     service: ProductService = Depends(get_product_service),
@@ -129,7 +135,7 @@ def activate_product(
         _raise_http_from_service_error(exc)
 
 
-@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{product_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[WriteAccess])
 def delete_product(
     product_id: ProductId,
     service: ProductService = Depends(get_product_service),

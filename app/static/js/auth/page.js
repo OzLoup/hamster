@@ -40,7 +40,10 @@ function redirectTarget(currentUser) {
     }
     const params = new URLSearchParams(window.location.search);
     const next = params.get("next");
-    return next && next.startsWith("/") ? next : "/";
+    if (next && next.startsWith("/")) {
+        return next;
+    }
+    return currentUser.role === "seller" ? "/sales" : "/";
 }
 
 async function handleSubmit(event) {

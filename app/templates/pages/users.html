@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}Usuarios | {{ app_name }}{% endblock %}
+
+{% block page_header %}
+<section class="saas-card mb-6 rounded-3xl p-6 sm:p-7">
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-xs uppercase tracking-[0.2em] text-teal-300/80">Tu equipo</p>
+            <h2 class="mt-2 font-display text-2xl font-semibold text-white sm:text-3xl">Usuarios</h2>
+            <p class="mt-2 text-sm text-slate-300">Administra quién puede entrar a {{ business_name }} y qué puede hacer cada uno.</p>
+        </div>
+        <div class="flex justify-end">
+            <button id="open-user-modal" type="button" class="saas-btn saas-btn-primary px-4 py-2.5 text-sm">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 5.25v13.5m6.75-6.75H5.25"/>
+                </svg>
+                Nuevo usuario
+            </button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<section class="saas-card rounded-3xl p-4 shadow-soft sm:p-6">
+    <div id="users-error" class="mb-4 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+    <div class="saas-table-wrap overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/70 text-xs uppercase tracking-wider text-slate-400">
+                    <th class="px-3 py-3 font-medium">Usuario</th>
+                    <th class="px-3 py-3 font-medium">Correo</th>
+                    <th class="px-3 py-3 font-medium">Rol</th>
+                    <th class="px-3 py-3 font-medium">Estado</th>
+                    <th class="px-3 py-3 font-medium text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="users-table-body" class="divide-y divide-slate-800 text-slate-200">
+                <tr>
+                    <td colspan="5" class="px-3 py-10">
+                        <div class="saas-empty animate-pulseSoft">Cargando usuarios...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div
+    id="user-modal-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div
+        id="user-modal-panel"
+        class="w-full max-w-xl scale-95 rounded-3xl border border-slate-700 bg-slate-900 shadow-glow transition-all duration-300"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="user-modal-title"
+    >
+        <div class="flex items-center justify-between border-b border-slate-800 px-5 py-4 sm:px-6">
+            <div>
+                <h3 id="user-modal-title" class="text-lg font-semibold text-white">Nuevo usuario</h3>
+                <p id="user-modal-subtitle" class="text-xs text-slate-400">Crea un acceso para tu equipo.</p>
+            </div>
+            <button
+                id="close-user-modal"
+                type="button"
+                class="rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+                aria-label="Cerrar ventana modal"
+            >
+                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <form id="user-form" class="space-y-4 px-5 py-5 sm:px-6" novalidate>
+            <input type="hidden" id="user-id" />
+            <div id="user-modal-errors" class="hidden rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-200" role="alert" aria-live="assertive"></div>
+
+            <div>
+                <label for="user-full-name" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Nombre completo</label>
+                <input id="user-full-name" name="full_name" type="text" class="user-field saas-input" placeholder="María Pérez" />
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label for="user-email" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Correo electrónico</label>
+                    <input id="user-email" name="email" type="email" class="user-field saas-input" placeholder="maria@negocio.com" />
+                </div>
+                <div>
+                    <label for="user-role" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Rol</label>
+                    <select id="user-role" name="role" class="user-field saas-select">
+                        <option value="admin">Administrador</option>
+                        <option value="coordinator">Coordinador</option>
+                        <option value="seller">Vendedor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="user-password" class="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-400">Contraseña</label>
+                <input id="user-password" name="password" type="password" class="user-field saas-input" placeholder="••••••••" />
+                <p id="user-password-hint" class="mt-1.5 text-xs text-slate-500">Mínimo 8 caracteres.</p>
+            </div>
+
+            <div class="flex flex-col-reverse gap-2 border-t border-slate-800 pt-4 sm:flex-row sm:justify-end">
+                <button
+                    id="cancel-user-modal"
+                    type="button"
+                    class="saas-btn saas-btn-muted px-4 py-2.5 text-sm"
+                >
+                    Cancelar
+                </button>
+                <button
+                    id="submit-user"
+                    type="submit"
+                    class="saas-btn saas-btn-primary px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                    <svg id="user-submit-spinner" class="hidden h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v3m0 9v3m7.5-7.5h-3m-9 0h-3m12.364 5.864l-2.122-2.122m-7.486-7.486L4.712 6.378m12.652 0l-2.122 2.122m-7.486 7.486L4.712 17.108"/>
+                    </svg>
+                    <span id="user-submit-label">Guardar usuario</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div
+    id="user-confirm-overlay"
+    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 py-6 backdrop-blur-sm opacity-0 transition-opacity duration-300"
+>
+    <div id="user-confirm-panel" class="w-full max-w-md scale-95 rounded-3xl border border-slate-700 bg-slate-900 p-6 shadow-glow transition-all duration-300">
+        <h3 id="user-confirm-title" class="text-lg font-semibold text-white">Desactivar usuario</h3>
+        <p id="user-confirm-message" class="mt-2 text-sm text-slate-300">¿Estás seguro?</p>
+        <div class="mt-6 flex justify-end gap-2">
+            <button id="cancel-user-confirm" type="button" class="saas-btn saas-btn-muted px-4 py-2 text-sm">Cancelar</button>
+            <button id="confirm-user-action" type="button" class="saas-btn saas-btn-danger px-4 py-2 text-sm">Desactivar</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', path='/js/users/page.js') }}"></script>
+{% endblock %}

@@ -112,6 +112,47 @@ export function renderTopSuppliers(items) {
     setSectionState("reports-top-suppliers-loading", "reports-top-suppliers-list", "reports-top-suppliers-empty", "content");
 }
 
+export function renderPaymentBreakdown(breakdown) {
+    const wrap = document.getElementById("reports-payment-breakdown-wrap");
+    if (!wrap) {
+        return;
+    }
+
+    wrap.innerHTML = `
+        <table class="min-w-full text-left text-sm">
+            <thead>
+                <tr class="border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400">
+                    <th class="px-3 py-2 font-medium">Método de pago</th>
+                    <th class="px-3 py-2 font-medium">Cant. de ventas</th>
+                    <th class="px-3 py-2 font-medium text-right">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+                ${breakdown.rows
+                    .map(
+                        (row) => `
+                            <tr>
+                                <td class="px-3 py-2.5 text-slate-200">${row.label}</td>
+                                <td class="px-3 py-2.5 text-slate-400">${row.count}</td>
+                                <td class="px-3 py-2.5 text-right text-slate-100">${currency(row.amount)}</td>
+                            </tr>
+                        `
+                    )
+                    .join("")}
+            </tbody>
+            <tfoot>
+                <tr class="border-t border-slate-700 font-semibold">
+                    <td class="px-3 py-3 text-slate-100">Total</td>
+                    <td class="px-3 py-3 text-slate-300">${breakdown.totalCount}</td>
+                    <td class="px-3 py-3 text-right text-emerald-300">${currency(breakdown.totalAmount)}</td>
+                </tr>
+            </tfoot>
+        </table>
+    `;
+
+    hideLoading("reports-payment-breakdown-loading", "reports-payment-breakdown-wrap");
+}
+
 export function renderStats({ totalSales, totalPurchases }) {
     const salesEl = document.getElementById("reports-stat-sales");
     const purchasesEl = document.getElementById("reports-stat-purchases");

@@ -12,11 +12,23 @@ import {
     renderLowStock,
     renderMonthlyPurchasesChart,
     renderMonthlyRevenueChart,
+    renderPaymentBreakdown,
     renderStats,
     renderTopProducts,
     renderTopSuppliers,
     showReportsError,
 } from "./ui.js";
+
+const PAYMENT_METHOD_LABELS = {
+    cash: "Efectivo",
+    card: "Tarjeta",
+    nequi: "Nequi",
+    daviplata: "Daviplata",
+    bre_b: "Bre-B",
+};
+const PAYMENT_METHOD_ORDER = ["cash", "card", "nequi", "daviplata", "bre_b"];
+const currentRole = window.currentUser?.role || "seller";
+const canSeeFinancials = currentRole === "admin" || currentRole === "coordinator";
 
 const exportButton = document.getElementById("export-report");
 const exportPdfButton = document.getElementById("export-report-pdf");
@@ -221,6 +233,32 @@ function totalAmount(entries) {
     return entries.reduce((sum, entry) => sum + Number(entry.total_amount || 0), 0);
 }
 
+function buildPaymentBreakdown(sales) {
+    const totals = new Map(PAYMENT_METHOD_ORDER.map((method) => [method, { count: 0, amount: 0 }]));
+
+    sales.forEach((sale) => {
+        const entry = totals.get(sale.payment_method) || { count: 0, amount: 0 };
+        entry.count += 1;
+        entry.amount += Number(sale.total_amount || 0);
+        totals.set(sale.payment_method, entry);
+    });
+
+    const rows = PAYMENT_METHOD_ORDER.map((method) => {
+        const entry = totals.get(method);
+        return {
+            method,
+            label: PAYMENT_METHOD_LABELS[method] || method,
+            count: entry.count,
+            amount: Number(entry.amount.toFixed(2)),
+        };
+    });
+
+    const totalCount = rows.reduce((sum, row) => sum + row.count, 0);
+    const totalAmountValue = Number(rows.reduce((sum, row) => sum + row.amount, 0).toFixed(2));
+
+    return { rows, totalCount, totalAmount: totalAmountValue };
+}
+
 function buildFixedDailySeries(sales) {
     const map = new Map();
     const today = new Date();
@@ -399,22 +437,29 @@ function updateChartLabels(range, sales, purchases) {
 function renderAll() {
     const filteredSales = filterEntriesByRange(rawSales, currentRange);
     const filteredPurchases = filterEntriesByRange(rawPurchases, currentRange);
-    const topProducts = buildTopProducts(rawProducts, filteredSales);
-    const topSuppliers = buildTopSuppliers(rawSuppliers, filteredPurchases);
-    const lowStock = buildLowStock(rawProducts);
-    const daily = computeDailySeries(filteredSales, currentRange);
-    const monthly = computeMonthlySeries(filteredSales, currentRange);
-    const monthlyPurchases = computeMonthlySeries(filteredPurchases, currentRange);
+    const topProducts = currentRole === "admin" ? buildTopProducts(rawProducts, filteredSales) : [];
+    const topSuppliers = canSeeFinancials ? buildTopSuppliers(rawSuppliers, filteredPurchases) : [];
+    const lowStock = canSeeFinancials ? buildLowStock(rawProducts) : [];
+    const paymentBreakdown = buildPaymentBreakdown(filteredSales);
     const totalSales = totalAmount(filteredSales);
-    const totalPurchases = totalAmount(filteredPurchases);
+    const totalPurchases = canSeeFinancials ? totalAmount(filteredPurchases) : 0;
 
     renderTopProducts(topProducts);
     renderLowStock(lowStock);
     renderTopSuppliers(topSuppliers);
-    renderDailySalesChart(daily.labels, daily.values);
-    renderMonthlyRevenueChart(monthly.labels, monthly.values);
-    renderMonthlyPurchasesChart(monthlyPurchases.labels, monthlyPurchases.values);
+    renderPaymentBreakdown(paymentBreakdown);
     renderStats({ totalSales, totalPurchases });
+
+    if (currentRole === "admin") {
+        const daily = computeDailySeries(filteredSales, currentRange);
+        const monthly = computeMonthlySeries(filteredSales, currentRange);
+        renderDailySalesChart(daily.labels, daily.values);
+        renderMonthlyRevenueChart(monthly.labels, monthly.values);
+    }
+    if (canSeeFinancials) {
+        const monthlyPurchases = computeMonthlySeries(filteredPurchases, currentRange);
+        renderMonthlyPurchasesChart(monthlyPurchases.labels, monthlyPurchases.values);
+    }
     updateChartLabels(currentRange, filteredSales, filteredPurchases);
 
     if (filterSummary) {
@@ -428,10 +473,12 @@ function renderAll() {
         topProducts,
         topSuppliers,
         lowStock,
+        paymentBreakdown,
         totalSales,
         totalPurchases,
         businessName,
         rangeLabel: formatRangeLabel(currentRange),
+        role: currentRole,
     };
 
     if (exportButton) {
@@ -444,12 +491,12 @@ function renderAll() {
 
 async function initReports() {
     try {
-        const [products, sales, purchases, suppliers, settings] = await Promise.all([
+        const [products, sales, settings, purchases, suppliers] = await Promise.all([
             fetchProductsForReports(),
             fetchSalesForReports(),
-            fetchPurchasesForReports(),
-            fetchSuppliersForReports(),
             fetchAppSettings().catch(() => null),
+            canSeeFinancials ? fetchPurchasesForReports() : Promise.resolve([]),
+            canSeeFinancials ? fetchSuppliersForReports() : Promise.resolve([]),
         ]);
 
         rawProducts = products;

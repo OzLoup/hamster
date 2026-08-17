@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 import uvicorn
 
 from app.core.config import settings
-from app.core.dependencies import get_db, require_business_web_user, require_web_user
+from app.core.dependencies import get_db, require_business_web_user, require_web_role, require_web_user
 from app.database.seed import seed_database_if_empty
 from app.models.user import User
 from app.routers.router import api_router
@@ -79,7 +79,9 @@ def admin_placeholder_page(
 
 @app.get("/", response_class=HTMLResponse)
 def home(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_business_web_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin", "coordinator")),
 ) -> HTMLResponse:
     return render_page(request, "index.html", db, current_user)
 
@@ -93,7 +95,9 @@ def products_page(
 
 @app.get("/categories", response_class=HTMLResponse)
 def categories_page(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_business_web_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin", "coordinator")),
 ) -> HTMLResponse:
     return render_page(request, "pages/categories.html", db, current_user)
 
@@ -107,14 +111,18 @@ def sales_page(
 
 @app.get("/suppliers", response_class=HTMLResponse)
 def suppliers_page(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_business_web_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin", "coordinator")),
 ) -> HTMLResponse:
     return render_page(request, "pages/suppliers.html", db, current_user)
 
 
 @app.get("/purchases", response_class=HTMLResponse)
 def purchases_page(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_business_web_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin", "coordinator")),
 ) -> HTMLResponse:
     return render_page(request, "pages/purchases.html", db, current_user)
 
@@ -135,9 +143,20 @@ def reports_page(
 
 @app.get("/settings", response_class=HTMLResponse)
 def settings_page(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(require_business_web_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin")),
 ) -> HTMLResponse:
     return render_page(request, "pages/settings.html", db, current_user)
+
+
+@app.get("/users", response_class=HTMLResponse)
+def users_page(
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_web_role("admin", "coordinator")),
+) -> HTMLResponse:
+    return render_page(request, "pages/users.html", db, current_user)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.dependencies import require_role
 from app.models.business import Business
 from app.schemas.app_settings import AppSettingsRead, AppSettingsUpdate
 from app.services.app_settings_service import AppSettingsService
@@ -24,7 +25,9 @@ def _to_app_settings_read(business: Business) -> AppSettingsRead:
     )
 
 
-@router.get("", response_model=AppSettingsRead)
+@router.get(
+    "", response_model=AppSettingsRead, dependencies=[Depends(require_role("admin", "coordinator", "seller"))]
+)
 def get_settings(service: AppSettingsService = Depends(get_app_settings_service)) -> AppSettingsRead:
     try:
         return _to_app_settings_read(service.get_settings())
@@ -32,7 +35,7 @@ def get_settings(service: AppSettingsService = Depends(get_app_settings_service)
         _raise_http_from_service_error(exc)
 
 
-@router.put("", response_model=AppSettingsRead)
+@router.put("", response_model=AppSettingsRead, dependencies=[Depends(require_role("admin"))])
 def update_settings(
     payload: AppSettingsUpdate, service: AppSettingsService = Depends(get_app_settings_service)
 ) -> AppSettingsRead:

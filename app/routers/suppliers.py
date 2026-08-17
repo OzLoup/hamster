@@ -2,12 +2,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, status
 
+from app.core.dependencies import require_role
 from app.schemas.supplier import SupplierCreate, SupplierRead, SupplierUpdate
 from app.services.dependencies import get_supplier_service
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.supplier_service import SupplierService
 
-router = APIRouter(prefix="/suppliers", tags=["suppliers"])
+router = APIRouter(
+    prefix="/suppliers", tags=["suppliers"], dependencies=[Depends(require_role("admin", "coordinator"))]
+)
 
 SupplierId = Annotated[int, Path(ge=1, description="Supplier identifier")]
 ActiveFilter = Annotated[bool | None, Query(description="Filter by active status")]

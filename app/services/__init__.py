@@ -14,6 +14,7 @@ from app.services.dependencies import (
 	get_purchase_service,
 	get_sale_service,
 	get_supplier_service,
+	get_user_service,
 )
 from app.services.exceptions import (
 	AuthenticationError,
@@ -29,6 +30,7 @@ from app.services.purchase_service import PurchaseService
 from app.services.sale_service import SaleService
 from app.services.sales_service import SalesService
 from app.services.supplier_service import SupplierService
+from app.services.user_service import UserService
 
 __all__ = [
 	"AppSettingsService",
@@ -41,6 +43,7 @@ __all__ = [
 	"SaleService",
 	"SalesService",
 	"SupplierService",
+	"UserService",
 	"ServiceError",
 	"NotFoundError",
 	"ConflictError",
@@ -56,4 +59,5 @@ __all__ = [
 	"get_purchase_service",
 	"get_sale_service",
 	"get_supplier_service",
+	"get_user_service",
 ]

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.dependencies import require_role
 from app.schemas.purchase import PurchaseCreate, PurchaseRead, PurchaseUpdate
 from app.services.dependencies import get_purchase_service
 from app.services.exceptions import ConflictError, NotFoundError, ServiceError, ValidationError
 from app.services.purchase_service import PurchaseService
 
-router = APIRouter(prefix="/purchases", tags=["purchases"])
+router = APIRouter(
+    prefix="/purchases", tags=["purchases"], dependencies=[Depends(require_role("admin", "coordinator"))]
+)
 
 
 def _raise_http_from_service_error(exc: Exception) -> None:
