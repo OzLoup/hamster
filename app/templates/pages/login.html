@@ -5,7 +5,11 @@
 {% block content %}
 <div class="w-full max-w-sm">
     <div class="mb-6 flex flex-col items-center text-center">
-        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-teal-500 to-brand-600 font-display text-lg font-bold text-white shadow-lg shadow-teal-500/25">H</span>
+        <img
+            src="{{ url_for('static', path='/img/logo.png') }}"
+            alt="{{ app_name }}"
+            class="h-48 w-48 rounded-2xl object-cover shadow-lg shadow-teal-500/25"
+        />
         <h1 class="mt-4 font-display text-2xl font-semibold text-white">{{ app_name }}</h1>
         <p class="mt-1 text-sm text-slate-400">Inicia sesión para continuar.</p>
     </div>
